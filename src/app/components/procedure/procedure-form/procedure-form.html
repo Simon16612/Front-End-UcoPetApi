@@ -243,7 +243,7 @@
 
         <div formArrayName="items">
 
-            @for (item of items.controls; track $index; let i = $index) {
+            @for (item of items.controls; track item; let i = $index) {
 
             <div class="row g-2 align-items-start mb-2" [formGroupName]="i">
 
