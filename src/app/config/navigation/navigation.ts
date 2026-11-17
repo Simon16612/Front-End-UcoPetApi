@@ -86,6 +86,7 @@ export const NAVIGATION: NavGroup[] = [
         path: 'notificaciones',
         entity: 'notification',
         label: 'Notificaciones',
+        ready: true,
         loadChildren: () =>
           import('../../routes/notification/notification.routes').then(
             (m) => m.NOTIFICATION_ROUTES,
