@@ -1,7 +1,8 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, map } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 import { SessionService } from '../../../services/session/session.service';
 import { SortHeader } from '../../../directives/shared/sort-header';
@@ -10,6 +11,9 @@ import { TablePager } from '../../shared/table-pager';
 import { Doctor } from '../../../models/doctor/doctor.model';
 import { PersonSummary } from '../../../models/person/person.model';
 import { DoctorService } from '../../../services/doctor/doctor.service';
+import { HeadquarterService } from '../../../services/headquarter/headquarter.service';
+import { acrossHeadquarters } from '../../../utils/shared/across-headquarters';
+import { HeadquarterSummary } from '../../shared/headquarter-summary';
 import { DoctorDialogs } from '../../../services/doctor/doctor-dialogs.service';
 import { PersonLookupService } from '../../../services/person/person-lookup.service';
 import { injectConfirm } from '../../../services/shared/confirm';
@@ -23,11 +27,16 @@ const PROCESSOR_DELAY_MS = 1500;
 
 @Component({
   selector: 'app-doctor-list',
-  imports: [RouterLink, SortHeader, TablePager],
+  imports: [RouterLink, SortHeader, TablePager, HeadquarterSummary],
   templateUrl: './doctor-list.html',
 })
 export class DoctorList {
   private readonly doctorService = inject(DoctorService);
+  private readonly headquarterService = inject(HeadquarterService);
+  protected readonly headquarterNames = toSignal(
+    this.headquarterService.list().pipe(map((list) => new Map(list.map((headquarter) => [headquarter.id, headquarter.name])))),
+    { initialValue: new Map<string, string>() },
+  );
   private readonly personLookup = inject(PersonLookupService);
   private readonly dialogs = inject(DoctorDialogs);
   private readonly toast = inject(ToastService);
@@ -67,16 +76,13 @@ export class DoctorList {
       this.refresh();
       const headquarterId = this.session.headquarterId();
       // El backend exige la sede: sin sede elegida no hay nada que consultar.
-      if (headquarterId === null) {
-        this.doctors.set([]);
-        this.loading.set(false);
-        this.error.set(null);
-        return;
-      }
       this.loading.set(untracked(() => this.doctors().length === 0));
       this.error.set(null);
       const subscription = forkJoin({
-        doctors: this.doctorService.list(headquarterId),
+        doctors:
+          headquarterId === null
+            ? acrossHeadquarters(this.headquarterService.list(), (id) => this.doctorService.list(id))
+            : this.doctorService.list(headquarterId),
         persons: this.personLookup.byId(),
       }).subscribe({
         next: ({ doctors, persons }) => {

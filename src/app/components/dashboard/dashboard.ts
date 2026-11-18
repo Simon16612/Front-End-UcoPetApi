@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { map } from 'rxjs';
 
 import { CatalogItem } from '../../models/product/catalog-item.model';
 import { CatalogService } from '../../services/product/catalog.service';
@@ -7,12 +8,14 @@ import { NAVIGATION, isReady } from '../../config/navigation/navigation';
 import { HeadquarterService } from '../../services/headquarter/headquarter.service';
 import { SessionService } from '../../services/session/session.service';
 import { KpiCard } from '../shared/kpi-card';
+import { HeadquarterSummary } from '../shared/headquarter-summary';
+import { acrossHeadquarters } from '../../utils/shared/across-headquarters';
 
 const LOW_STOCK = 5;
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, KpiCard],
+  imports: [RouterLink, KpiCard, HeadquarterSummary],
   templateUrl: './dashboard.html',
 })
 export class Dashboard implements OnInit {
@@ -25,7 +28,7 @@ export class Dashboard implements OnInit {
   );
   protected readonly activeHeadquarters = signal<number | null>(null);
   protected readonly clinicItems = signal<CatalogItem[] | null>(null);
-  protected readonly headquarterItems = signal<CatalogItem[] | null>(null);
+  protected readonly headquarterItems = signal<(CatalogItem & { headquarterId?: string })[] | null>(null);
 
   protected readonly productCount = computed(
     () => this.clinicItems()?.filter((item) => item.type === 'PRODUCT').length ?? null,
@@ -37,7 +40,17 @@ export class Dashboard implements OnInit {
     () =>
       this.headquarterItems()
         ?.filter((item) => item.type === 'PRODUCT' && (item.stockAtLocation ?? 0) <= LOW_STOCK)
+        .filter((item) => item.headquarterId === undefined || this.stockedHeadquarters().has(item.headquarterId))
         .sort((a, b) => (a.stockAtLocation ?? 0) - (b.stockAtLocation ?? 0)) ?? null,
+  );
+
+  private readonly stockedHeadquarters = computed(
+    () =>
+      new Set(
+        (this.headquarterItems() ?? [])
+          .filter((item) => (item.stockAtLocation ?? 0) > 0 && item.headquarterId !== undefined)
+          .map((item) => item.headquarterId as string),
+      ),
   );
 
   protected readonly modules = computed(() => {
@@ -54,11 +67,15 @@ export class Dashboard implements OnInit {
     effect((onCleanup) => {
       const headquarterId = this.session.headquarterId();
       this.headquarterItems.set(null);
-      if (headquarterId === null) {
-        return;
-      }
-      const subscription = this.catalogService
-        .list({ active: true, type: 'PRODUCT', headquarterId })
+      const request$ =
+        headquarterId === null
+          ? acrossHeadquarters(this.headquarterService.list(), (id) =>
+              this.catalogService
+                .list({ active: true, type: 'PRODUCT', headquarterId: id })
+                .pipe(map((items) => items.map((item) => ({ ...item, headquarterId: id })))),
+            )
+          : this.catalogService.list({ active: true, type: 'PRODUCT', headquarterId });
+      const subscription = request$
         .subscribe({
           next: (items) => this.headquarterItems.set(items),
           error: () => this.headquarterItems.set([]),

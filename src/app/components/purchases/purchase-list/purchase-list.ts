@@ -9,7 +9,6 @@ import { map } from 'rxjs';
 import { PageHeader } from '../../shared/page-header';
 import { KpiCard } from '../../shared/kpi-card';
 import { TablePager } from '../../shared/table-pager';
-import { EmptyState } from '../../shared/empty-state';
 import { SortHeader } from '../../../directives/shared/sort-header';
 import { createTableState } from '../../../utils/shared/table-state';
 import { labelOf } from '../../../models/product/catalog-enums';
@@ -20,6 +19,9 @@ import {
   PurchaseStatus,
 } from '../../../models/purchases/purchase-enums';
 import { PurchaseService } from '../../../services/purchases/purchase.service';
+import { HeadquarterService } from '../../../services/headquarter/headquarter.service';
+import { acrossHeadquarters } from '../../../utils/shared/across-headquarters';
+import { HeadquarterSummary } from '../../shared/headquarter-summary';
 import { PurchaseDialogs } from '../../../services/purchases/purchase-dialogs.service';
 import { SessionService } from '../../../services/session/session.service';
 import { ToastService } from '../../../services/shared/toast.service';
@@ -38,14 +40,19 @@ const MAX_PAGE_SIZE = 100;
     PricePipe,
     PageHeader,
     KpiCard,
-    EmptyState,
     SortHeader,
     TablePager,
+    HeadquarterSummary,
   ],
   templateUrl: './purchase-list.html',
 })
 export class PurchaseList {
   private readonly purchaseService = inject(PurchaseService);
+  private readonly headquarterService = inject(HeadquarterService);
+  protected readonly headquarterNames = toSignal(
+    this.headquarterService.list().pipe(map((list) => new Map(list.map((headquarter) => [headquarter.id, headquarter.name])))),
+    { initialValue: new Map<string, string>() },
+  );
   private readonly dialogs = inject(PurchaseDialogs);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(NonNullableFormBuilder);
@@ -66,6 +73,9 @@ export class PurchaseList {
   );
 
   protected readonly purchases = signal<Purchase[]>([]);
+  protected readonly purchaseHeadquarters = computed(() =>
+    this.purchases().map((purchase) => ({ headquarterId: purchase.headquarter.id })),
+  );
   protected readonly suppliers = signal<PurchaseSupplierOption[]>([]);
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -124,18 +134,23 @@ export class PurchaseList {
     effect((onCleanup) => {
       this.refresh();
       const filters = this.apiFilters();
-      if (filters === null) {
-        this.purchases.set([]);
-        this.loading.set(false);
-        return;
-      }
+      const { status, supplierId } = this.filters();
       this.loading.set(untracked(() => this.purchases().length === 0));
       this.error.set(null);
-      const subscription = this.purchaseService
-        .list({ ...filters, page: 0, size: MAX_PAGE_SIZE })
+      const request$ =
+        filters === null
+          ? acrossHeadquarters(this.headquarterService.list(), (id) =>
+              this.purchaseService
+                .list({ ...toApiFilters(id, status, supplierId), page: 0, size: MAX_PAGE_SIZE })
+                .pipe(map((result) => result.content)),
+            )
+          : this.purchaseService
+              .list({ ...filters, page: 0, size: MAX_PAGE_SIZE })
+              .pipe(map((result) => result.content));
+      const subscription = request$
         .subscribe({
-          next: (result) => {
-            this.purchases.set(result.content);
+          next: (content) => {
+            this.purchases.set(content);
             this.loading.set(false);
           },
           error: (error: HttpErrorResponse) => {

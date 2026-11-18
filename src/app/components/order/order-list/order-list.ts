@@ -1,4 +1,4 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 
@@ -9,6 +9,9 @@ import { OrderService } from '../../../services/order/order.service';
 import { OrderDialogs } from '../../../services/order/order-dialogs.service';
 import { ProcedureService } from '../../../services/procedure/procedure.service';
 import { PetService } from '../../../services/pet/pet.service';
+import { HeadquarterService } from '../../../services/headquarter/headquarter.service';
+import { acrossHeadquarters } from '../../../utils/shared/across-headquarters';
+import { HeadquarterSummary } from '../../shared/headquarter-summary';
 import { PersonLookupService } from '../../../services/person/person-lookup.service';
 
 import { ORDER_STATES, Order, OrderState } from '../../../models/order/order.model';
@@ -29,7 +32,7 @@ type StatusFilter = OrderState | 'ALL';
 
 @Component({
   selector: 'app-order-list',
-  imports: [SortHeader, TablePager, DatePipe],
+  imports: [SortHeader, TablePager, DatePipe, HeadquarterSummary],
   templateUrl: './order-list.html',
 })
 export class OrderList {
@@ -40,6 +43,7 @@ export class OrderList {
   private readonly procedureService = inject(ProcedureService);
 
   private readonly petService = inject(PetService);
+  private readonly headquarterService = inject(HeadquarterService);
 
   private readonly personLookup = inject(PersonLookupService);
 
@@ -68,6 +72,9 @@ export class OrderList {
   private readonly procedures = signal<Procedure[]>([]);
 
   private readonly pets = signal<Pet[]>([]);
+  protected readonly orderHeadquarters = computed(() =>
+    this.all().map((order) => ({ headquarterId: this.petHeadquarter(order.petId) })),
+  );
 
   // Estados de la consulta
   protected readonly loading = signal(false);
@@ -100,22 +107,9 @@ export class OrderList {
       .pipe(catchError(() => of([] as Procedure[])))
       .subscribe((procedures) => this.procedures.set(procedures));
 
-    // Las mascotas dependen de la sede activa: sin sede no se pueden consultar
-    effect((onCleanup) => {
-      const headquarterId = this.session.headquarterId();
-
-      if (headquarterId === null) {
-        this.pets.set([]);
-        return;
-      }
-
-      const subscription = this.petService
-        .getByHeadquarter({ headquarterId })
-        .pipe(catchError(() => of([] as Pet[])))
-        .subscribe((pets) => this.pets.set(pets));
-
-      onCleanup(() => subscription.unsubscribe());
-    });
+    acrossHeadquarters(this.headquarterService.list(), (id) => this.petService.getByHeadquarter({ headquarterId: id }))
+      .pipe(catchError(() => of([] as Pet[])))
+      .subscribe((pets) => this.pets.set(pets));
 
     // Cada vez que cambie la señal de actualización se vuelve a consultar el backend
     effect((onCleanup) => {
@@ -150,7 +144,13 @@ export class OrderList {
 
       const status = this.status();
 
-      const rows = this.all().filter((order) => status === 'ALL' || order.state === status);
+      const headquarterId = this.session.headquarterId();
+
+      const rows = this.all().filter(
+        (order) =>
+          (status === 'ALL' || order.state === status) &&
+          (headquarterId === null || this.petHeadquarter(order.petId) === headquarterId),
+      );
 
       if (!text) {
         this.visible.set(rows);
@@ -278,6 +278,10 @@ export class OrderList {
   // así que se puede volver a consultar de inmediato
   private reload(): void {
     this.refresh.update((value) => value + 1);
+  }
+
+  private petHeadquarter(petId: string): string | null {
+    return this.pets().find((pet) => pet.id === petId)?.headquarterId ?? null;
   }
 }
 

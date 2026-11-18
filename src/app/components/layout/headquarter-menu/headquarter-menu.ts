@@ -1,9 +1,11 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { UpperCasePipe } from '@angular/common';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { catchError, forkJoin, of } from 'rxjs';
 
 import { Headquarter } from '../../../models/headquarter/headquarter.model';
 import { HeadquarterService } from '../../../services/headquarter/headquarter.service';
+import { AppointmentService } from '../../../services/appointment/appointment.service';
 import { SessionService } from '../../../services/session/session.service';
 
 @Component({
@@ -14,10 +16,12 @@ import { SessionService } from '../../../services/session/session.service';
 })
 export class HeadquarterMenu implements OnInit {
   private readonly headquarterService = inject(HeadquarterService);
+  private readonly appointmentService = inject(AppointmentService);
   protected readonly session = inject(SessionService);
 
   protected readonly headquarters = signal<Headquarter[]>([]);
   protected readonly search = signal('');
+  protected readonly allowAll = signal(true);
   protected readonly current = computed(
     () =>
       this.headquarters().find((headquarter) => headquarter.id === this.session.headquarterId()) ??
@@ -32,11 +36,24 @@ export class HeadquarterMenu implements OnInit {
   });
 
   ngOnInit(): void {
-    this.headquarterService.list().subscribe({
-      next: (headquarters) => {
-        const active = headquarters
+    forkJoin({
+      headquarters: this.headquarterService.list(),
+      doctor: this.session.isAdmin()
+        ? of(null)
+        : this.appointmentService.ownDoctor().pipe(catchError(() => of(null))),
+    }).subscribe({
+      next: ({ headquarters, doctor }) => {
+        let active = headquarters
           .filter((headquarter) => headquarter.isActive)
           .sort((a, b) => a.name.localeCompare(b.name));
+        const ownHeadquarter = doctor?.headquarterId ?? null;
+        if (ownHeadquarter !== null && active.some((headquarter) => headquarter.id === ownHeadquarter)) {
+          active = active.filter((headquarter) => headquarter.id === ownHeadquarter);
+          this.allowAll.set(false);
+          if (this.session.headquarterId() !== ownHeadquarter) {
+            this.session.selectHeadquarter(ownHeadquarter);
+          }
+        }
         this.headquarters.set(active);
         const selected = this.session.headquarterId();
         if (selected !== null && !active.some((headquarter) => headquarter.id === selected)) {

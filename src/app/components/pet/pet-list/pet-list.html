@@ -86,12 +86,9 @@
     </div>
   }
 
-  @if (!session.headquarterId()) {
-    <div class="alert alert-info m-3 mb-0">
-      <i class="bi bi-info-circle me-2"></i>
-      Selecciona una sede para consultar sus mascotas.
-    </div>
-  }
+  <div class="px-3 pt-3">
+    <app-headquarter-summary [items]="pets()" label="Mascotas" />
+  </div>
 
   <div class="table-responsive">
     <table class="table table-hover align-middle table-card">
@@ -101,6 +98,9 @@
             Mascota
           </th>
 
+          @if (!session.headquarterId()) {
+            <th>Sede</th>
+          }
           <th appSortHeader="breed" [table]="table">
             Raza
           </th>
@@ -135,12 +135,6 @@
               </div>
             </td>
           </tr>
-        } @else if (!session.headquarterId()) {
-          <tr>
-            <td colspan="7" class="text-center text-body-secondary py-4">
-              Selecciona una sede para mostrar las mascotas.
-            </td>
-          </tr>
         } @else {
           @for (pet of table.rows(); track pet.id) {
             <tr>
@@ -159,6 +153,9 @@
                 }
               </td>
 
+              @if (!session.headquarterId()) {
+                <td class="text-nowrap">{{ headquarterNames().get(pet.headquarterId) ?? '—' }}</td>
+              }
               <td>
                 {{ pet.breed }}
               </td>

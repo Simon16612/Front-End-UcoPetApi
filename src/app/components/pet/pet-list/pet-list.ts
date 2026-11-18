@@ -7,6 +7,9 @@ import { map, timer, switchMap } from 'rxjs';
 
 import { SessionService } from '../../../services/session/session.service';
 import { PetService } from '../../../services/pet/pet.service';
+import { HeadquarterService } from '../../../services/headquarter/headquarter.service';
+import { acrossHeadquarters } from '../../../utils/shared/across-headquarters';
+import { HeadquarterSummary } from '../../shared/headquarter-summary';
 import { PetDialogs } from '../../../services/pet/pet-dialogs.service';
 
 import { Pet, PetFilters } from '../../../models/pet/pet.model';
@@ -25,13 +28,21 @@ import { ToastService } from '../../../services/shared/toast.service';
   imports: [
     SortHeader,
     TablePager,
-    RouterLink
+    RouterLink,
+    HeadquarterSummary
   ],
   templateUrl: './pet-list.html'
 })
 export class PetList {
 
   private readonly petService = inject(PetService);
+
+  private readonly headquarterService = inject(HeadquarterService);
+
+  protected readonly headquarterNames = toSignal(
+    this.headquarterService.list().pipe(map((list) => new Map(list.map((headquarter) => [headquarter.id, headquarter.name])))),
+    { initialValue: new Map<string, string>() }
+  );
 
   private readonly dialogs = inject(PetDialogs);
 
@@ -111,19 +122,6 @@ export class PetList {
 
       this.refresh();
 
-      // La API necesita una sede específica
-      if (headquarterId === null) {
-
-        this.pets.set([]);
-
-        this.loading.set(false);
-
-        this.error.set(null);
-
-        return;
-
-      }
-
       this.loading.set(true);
 
       this.error.set(null);
@@ -136,9 +134,13 @@ export class PetList {
        
       const tutorId = this.tutorId();
 
-      const request$ = tutorId
-        ? this.petService.getByTutor(tutorId, headquarterId)
-        : this.petService.getByHeadquarter(filters);
+      const loadIn = (id: string) => tutorId
+        ? this.petService.getByTutor(tutorId, id)
+        : this.petService.getByHeadquarter({ ...filters, headquarterId: id });
+
+      const request$ = headquarterId === null
+        ? acrossHeadquarters(this.headquarterService.list(), loadIn)
+        : loadIn(headquarterId);
 
       const subscription = timer(300).pipe(
         switchMap(() => request$)

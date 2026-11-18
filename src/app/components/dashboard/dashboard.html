@@ -43,23 +43,16 @@
     />
   </div>
   <div class="col-6 col-xl-3">
-    @if (session.headquarterId()) {
-      <app-kpi-card
-        label="Poco stock"
-        [value]="lowStock()?.length ?? null"
-        [hint]="'productos con ' + lowStockLimit + ' u. o menos'"
-        scope="Sede activa"
-        [tone]="(lowStock()?.length ?? 0) > 0 ? 'warn' : 'default'"
-      />
-    } @else {
-      <app-kpi-card
-        label="Poco stock"
-        hint="elige una sede arriba para verlo"
-        scope="Sede activa"
-      />
-    }
+    <app-kpi-card
+      label="Poco stock"
+      [value]="lowStock()?.length ?? null"
+      [hint]="'productos con ' + lowStockLimit + ' u. o menos' + (session.headquarterId() ? '' : ', sumando sedes')"
+      [scope]="session.headquarterId() ? 'Sede activa' : 'Toda la clínica'"
+      [tone]="(lowStock()?.length ?? 0) > 0 ? 'warn' : 'default'"
+    />
   </div>
 </div>
+<app-headquarter-summary [items]="lowStock() ?? []" label="Poco stock" />
 
 <div class="row g-4">
   <div class="col-lg-7">

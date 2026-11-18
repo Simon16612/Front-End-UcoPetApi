@@ -9,15 +9,7 @@
   }
 </app-page-header>
 
-@if (!session.headquarterId()) {
-  <div class="card">
-    <app-empty-state
-      icon="bi-buildings"
-      title="Elige una sede para ver sus compras"
-      text="Las compras se consultan por sede. Usa el selector “Trabajar en” de la barra superior para elegir una."
-    />
-  </div>
-} @else {
+<app-headquarter-summary [items]="purchaseHeadquarters()" label="Compras" />
   <div class="row g-3 mb-4">
     <div class="col-6 col-xl-3">
       <app-kpi-card label="Compras" [value]="purchaseCount()" hint="con estos filtros" />
@@ -93,6 +85,9 @@
           <tr>
             <th appSortHeader="number" [table]="table">Compra</th>
             <th appSortHeader="purchaseDate" [table]="table">Fecha</th>
+            @if (!session.headquarterId()) {
+              <th>Sede</th>
+            }
             <th appSortHeader="supplier" [table]="table">Proveedor</th>
             <th class="text-end" appSortHeader="total" [table]="table" [end]="true">Total</th>
             <th appSortHeader="status" [table]="table">Estado</th>
@@ -115,6 +110,9 @@
                   }}</a>
                 </td>
                 <td class="small text-nowrap">{{ purchase.purchaseDate | date: 'dd/MM/yyyy' }}</td>
+                @if (!session.headquarterId()) {
+                  <td class="text-nowrap">{{ purchase.headquarter.name ?? headquarterNames().get(purchase.headquarter.id) ?? '—' }}</td>
+                }
                 <td>{{ purchase.supplier.name ?? providerName(purchase.supplier.id) }}</td>
                 <td class="text-end fw-semibold text-nowrap">{{ purchase.total | price }}</td>
                 <td>
@@ -145,4 +143,3 @@
     </div>
     <app-table-pager [total]="table.total()" [(page)]="table.page" [(pageSize)]="table.pageSize" />
   </div>
-}

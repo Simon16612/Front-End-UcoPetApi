@@ -1,7 +1,8 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, forkJoin, map, of } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 import { SessionService } from '../../../services/session/session.service';
 import { SortHeader } from '../../../directives/shared/sort-header';
@@ -12,6 +13,9 @@ import { SpecialtieDoctor } from '../../../models/doctor/specialtie-doctor.model
 import { PersonSummary } from '../../../models/person/person.model';
 import { Specialtie } from '../../../models/specialtie/specialtie.model';
 import { DoctorService } from '../../../services/doctor/doctor.service';
+import { HeadquarterService } from '../../../services/headquarter/headquarter.service';
+import { acrossHeadquarters } from '../../../utils/shared/across-headquarters';
+import { HeadquarterSummary } from '../../shared/headquarter-summary';
 import { DoctorDialogs } from '../../../services/doctor/doctor-dialogs.service';
 import { SpecialtieDoctorService } from '../../../services/doctor/specialtie-doctor.service';
 import { PersonLookupService } from '../../../services/person/person-lookup.service';
@@ -25,12 +29,17 @@ const PROCESSOR_DELAY_MS = 1500;
 
 @Component({
   selector: 'app-specialtie-doctor-list',
-  imports: [RouterLink, SortHeader, TablePager],
+  imports: [RouterLink, SortHeader, TablePager, HeadquarterSummary],
   templateUrl: './specialtie-doctor-list.html',
 })
 export class SpecialtieDoctorList {
   private readonly relationService = inject(SpecialtieDoctorService);
   private readonly doctorService = inject(DoctorService);
+  private readonly headquarterService = inject(HeadquarterService);
+  protected readonly headquarterNames = toSignal(
+    this.headquarterService.list().pipe(map((list) => new Map(list.map((headquarter) => [headquarter.id, headquarter.name])))),
+    { initialValue: new Map<string, string>() },
+  );
   private readonly specialtieService = inject(SpecialtieService);
   private readonly personLookup = inject(PersonLookupService);
   private readonly dialogs = inject(DoctorDialogs);
@@ -87,18 +96,17 @@ export class SpecialtieDoctorList {
       this.refresh();
       const headquarterId = this.session.headquarterId();
       // El backend exige la sede: sin sede elegida no hay nada que consultar.
-      if (headquarterId === null) {
-        this.relations.set([]);
-        this.doctors.set([]);
-        this.loading.set(false);
-        this.error.set(null);
-        return;
-      }
       this.loading.set(untracked(() => this.relations().length === 0));
       this.error.set(null);
       const subscription = forkJoin({
-        relations: this.relationService.list(headquarterId),
-        doctors: this.doctorService.list(headquarterId),
+        relations:
+          headquarterId === null
+            ? acrossHeadquarters(this.headquarterService.list(), (id) => this.relationService.list(id))
+            : this.relationService.list(headquarterId),
+        doctors:
+          headquarterId === null
+            ? acrossHeadquarters(this.headquarterService.list(), (id) => this.doctorService.list(id))
+            : this.doctorService.list(headquarterId),
         persons: this.personLookup.byId(),
         // Si la lista de especialidades no se puede leer, se muestra el id.
         specialties: this.specialtieService.list().pipe(catchError(() => of([] as Specialtie[]))),
