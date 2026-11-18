@@ -14,6 +14,8 @@ import { injectConfirm } from '../../../services/shared/confirm';
 import { ToastService } from '../../../services/shared/toast.service';
 import { apiErrorMessage } from '../../../utils/shared/api-error';
 
+const PROCESSOR_DELAY_MS = 1500;
+
 @Component({
   selector: 'app-headquarter-list',
   imports: [RouterLink, SortHeader, TablePager, PageHeader],
@@ -77,17 +79,22 @@ export class HeadquarterList {
     });
   }
 
+  private reloadAfterProcessor(): void {
+    this.reload.update((value) => value + 1);
+    setTimeout(() => this.reload.update((value) => value + 1), PROCESSOR_DELAY_MS);
+  }
+
   protected create(): void {
     this.dialogs.headquarter().subscribe((saved) => {
       this.toast.info(`"${saved.name}" se envió a crear; el procesador la aplica en un momento`);
-      this.reload.update((value) => value + 1);
+      this.reloadAfterProcessor();
     });
   }
 
   protected edit(headquarter: Headquarter): void {
     this.dialogs.headquarter(headquarter.id).subscribe((saved) => {
       this.toast.info(`"${saved.name}" se envió a actualizar; el procesador la aplica en un momento`);
-      this.reload.update((value) => value + 1);
+      this.reloadAfterProcessor();
     });
   }
 
@@ -103,7 +110,7 @@ export class HeadquarterList {
         this.toast.info(
           `"${headquarter.name}" se envió a reactivar; el procesador lo aplica en un momento`,
         );
-        this.reload.update((value) => value + 1);
+        this.reloadAfterProcessor();
       },
       error: (error: HttpErrorResponse) =>
         this.toast.error(apiErrorMessage(error, 'No se pudo reactivar la sede')),
@@ -124,7 +131,7 @@ export class HeadquarterList {
           this.toast.info(
             `"${headquarter.name}" se envió a dar de baja; el procesador lo aplica en un momento`,
           );
-          this.reload.update((value) => value + 1);
+          this.reloadAfterProcessor();
         },
         error: (error: HttpErrorResponse) =>
           this.toast.error(apiErrorMessage(error, 'No se pudo dar de baja la sede')),
