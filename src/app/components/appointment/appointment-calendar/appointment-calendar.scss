@@ -13,8 +13,11 @@
 }
 
 .cal-range {
-  text-transform: capitalize;
   font-weight: 800;
+
+  &::first-letter {
+    text-transform: uppercase;
+  }
 }
 
 .cal {
