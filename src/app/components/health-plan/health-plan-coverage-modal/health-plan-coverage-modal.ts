@@ -7,6 +7,7 @@ import { HealthPlan } from '../../../models/health-plan/health-plan.model';
 import { HealthPlanCoverage } from '../../../models/health-plan/health-plan-coverage.model';
 import { Procedure } from '../../../models/procedure/procedure.model';
 import { HEALTH_PLAN_COVERAGE_RULES } from '../../../utils/health-plan/form-rules';
+import { injectConfirm } from '../../../services/shared/confirm';
 
 @Component({
   selector: 'app-health-plan-coverage-modal',
@@ -201,16 +202,23 @@ export class HealthPlanCoverageModal implements OnInit {
     this.cdr.detectChanges();
   }
 
-  deleteCoverage(coverageId?: string): void {
-    if (!coverageId || !this.plan.id || !confirm('¿Desea desactivar esta cobertura?')) return;
+  private readonly confirm = injectConfirm();
 
-    this.healthPlanService.deleteCoverage(this.plan.id, coverageId).subscribe({
-      next: () => this.loadCoverages(),
-      error: (err: unknown) => {
-        console.error('Error al desactivar cobertura:', err);
-        this.cdr.detectChanges();
-      }
-    });
+  deleteCoverage(coverageId?: string): void {
+    const planId = this.plan.id;
+    if (!coverageId || !planId) return;
+
+    this.confirm('Desactivar cobertura', 'La cobertura deja de aplicar a las mascotas de esta póliza.', 'Desactivar')
+      .subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.healthPlanService.deleteCoverage(planId, coverageId).subscribe({
+          next: () => this.loadCoverages(),
+          error: (err: unknown) => {
+            console.error('Error al desactivar cobertura:', err);
+            this.cdr.detectChanges();
+          }
+        });
+      });
   }
 
   resetForm(): void {

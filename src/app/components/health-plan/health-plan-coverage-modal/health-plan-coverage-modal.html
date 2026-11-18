@@ -1,34 +1,34 @@
 <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
   <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content rounded-4 border-0 shadow">
+    <div class="modal-content">
       
       <!-- Header -->
-      <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title fw-bold">Coberturas del Plan: {{ plan.name }}</h5>
+      <div class="modal-header">
+        <h5 class="modal-title">Coberturas de {{ plan.name }}</h5>
         <button type="button" class="btn-close" (click)="close()"></button>
       </div>
 
       <!-- Body -->
-      <div class="modal-body p-4">
+      <div class="modal-body">
         
-        <div *ngIf="errorMessage" class="alert alert-danger rounded-3 mb-3">
+        <div *ngIf="errorMessage" class="alert alert-danger mb-3">
           {{ errorMessage }}
         </div>
 
         <!-- Formulario de Asociación -->
-        <form [formGroup]="coverageForm" (ngSubmit)="saveCoverage()" class="bg-light p-3 rounded-4 mb-4">
-          <h6 class="fw-semibold text-secondary mb-3">
+        <form [formGroup]="coverageForm" (ngSubmit)="saveCoverage()" class="card card-body bg-body-tertiary mb-4">
+          <h6 class="text-body-secondary mb-3">
             {{ isEditing ? 'Editar Cobertura' : 'Asociar Nueva Cobertura' }}
           </h6>
 
           <div class="row g-3">
             <!-- Servicio -->
             <div class="col-md-6">
-              <label for="covService" class="form-label small fw-semibold">Servicio Veterinario *</label>
+              <label for="covService" class="form-label small">Servicio Veterinario *</label>
               <select
                 id="covService"
                 formControlName="serviceId"
-                class="form-select rounded-3"
+                class="form-select"
                 [class.is-invalid]="coverageForm.get('serviceId')?.touched && coverageForm.get('serviceId')?.invalid"
               >
                 <option value="">-- Seleccionar servicio --</option>
@@ -43,11 +43,11 @@
 
             <!-- Procedimiento -->
             <div class="col-md-6">
-              <label for="covProcedure" class="form-label small fw-semibold">Procedimiento Médico *</label>
+              <label for="covProcedure" class="form-label small">Procedimiento Médico *</label>
               <select
                 id="covProcedure"
                 formControlName="procedureId"
-                class="form-select rounded-3"
+                class="form-select"
                 [class.is-invalid]="coverageForm.get('procedureId')?.touched && coverageForm.get('procedureId')?.invalid"
               >
                 <option value="">-- Seleccionar procedimiento --</option>
@@ -57,7 +57,7 @@
               </select>
 
               <!-- Recuadro informativo dinámico con el código y la descripción -->
-              <div *ngIf="getSelectedProcedure() as proc" class="mt-2 p-2 bg-white border rounded-3 small text-muted shadow-sm">
+              <div *ngIf="getSelectedProcedure() as proc" class="mt-2 p-2 bg-white border rounded small text-body-secondary">
                 <span class="fw-bold text-dark">[{{ proc.code }}]</span> {{ proc.description }}
               </div>
 
@@ -68,30 +68,30 @@
 
             <!-- Porcentaje (Máximo 80%) -->
             <div class="col-md-6">
-              <label for="covPercent" class="form-label small fw-semibold">Porcentaje Cobertura (%) *</label>
+              <label for="covPercent" class="form-label small">Porcentaje Cobertura (%) *</label>
               <input
                 id="covPercent"
                 type="number"
                 formControlName="coveragePercentage"
-                class="form-control rounded-3"
+                class="form-control"
                 placeholder="Ej: 80"
                 [class.is-invalid]="coverageForm.get('coveragePercentage')?.touched && coverageForm.get('coveragePercentage')?.invalid"
               />
               <div class="invalid-feedback d-block" *ngIf="coverageForm.get('coveragePercentage')?.touched && coverageForm.get('coveragePercentage')?.invalid">
                 <span *ngIf="coverageForm.get('coveragePercentage')?.errors?.['required']">El porcentaje es obligatorio.</span>
-                <span *ngIf="coverageForm.get('coveragePercentage')?.errors?.['max']">⚠️ El porcentaje no puede superar el 80%.</span>
+                <span *ngIf="coverageForm.get('coveragePercentage')?.errors?.['max']">El porcentaje no puede superar el 80%.</span>
                 <span *ngIf="coverageForm.get('coveragePercentage')?.errors?.['min']">El porcentaje mínimo es 1%.</span>
               </div>
             </div>
 
             <!-- Límite de Cobertura ($ COP) -->
             <div class="col-md-6">
-              <label for="covLimit" class="form-label small fw-semibold">Límite Cobertura ($ COP) *</label>
+              <label for="covLimit" class="form-label small">Límite Cobertura ($ COP) *</label>
               <input
                 id="covLimit"
                 type="text"
                 formControlName="coverageLimit"
-                class="form-control rounded-3"
+                class="form-control"
                 placeholder="Ej: 100000"
                 [class.is-invalid]="coverageForm.get('coverageLimit')?.touched && coverageForm.get('coverageLimit')?.invalid"
               />
@@ -105,47 +105,49 @@
           </div>
 
           <div class="d-flex justify-content-end gap-2 mt-3">
-            <button *ngIf="isEditing" type="button" (click)="resetForm()" class="btn btn-sm btn-light rounded-pill px-3">
-              Cancelar Edición
+            <button *ngIf="isEditing" type="button" (click)="resetForm()" class="btn btn-sm btn-light">
+              Cancelar edición
             </button>
-            <button type="submit" class="btn btn-sm btn-info text-white fw-semibold rounded-pill px-4" [disabled]="coverageForm.invalid">
-              {{ isEditing ? 'Guardar Cambios' : '+ Agregar Cobertura' }}
+            <button type="submit" class="btn btn-sm btn-primary" [disabled]="coverageForm.invalid">
+              <i class="bi me-1" [class.bi-check2]="isEditing" [class.bi-plus-lg]="!isEditing"></i>{{ isEditing ? 'Guardar cambios' : 'Agregar cobertura' }}
             </button>
           </div>
         </form>
 
         <!-- Tabla de Coberturas -->
-        <h6 class="fw-bold mb-3">Coberturas Asociadas</h6>
+        <h6 class="fw-semibold mb-3">Coberturas asociadas</h6>
         <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="table-light text-secondary small text-uppercase">
+          <table class="table table-hover align-middle table-card mb-0">
+            <thead>
               <tr>
                 <th>Servicio</th>
                 <th>Procedimiento</th>
                 <th>Cobertura</th>
                 <th>Límite ($ COP)</th>
-                <th class="text-end pe-3">Acción</th>
+                <th class="text-end"></th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let cov of coverages">
                 <td class="fw-semibold">{{ getServiceName(cov.serviceId) }}</td>
-                <td class="text-muted small">{{ getProcedureName(cov.procedureId) }}</td>
+                <td class="text-body-secondary small">{{ getProcedureName(cov.procedureId) }}</td>
                 <td>
-                  <span class="badge bg-info-subtle text-info rounded-pill px-2 py-1">
+                  <span class="badge rounded-pill bg-info-subtle text-info-emphasis">
                     {{ cov.coveragePercentage }}%
                   </span>
                 </td>
                 <td class="fw-semibold">${{ cov.coverageLimit | number:'1.0-0' }}</td>
-                <td class="text-end pe-3">
-                  <div class="btn-group btn-group-sm">
-                    <button (click)="editCoverage(cov)" class="btn btn-outline-secondary">Editar</button>
-                    <button (click)="deleteCoverage(cov.id)" class="btn btn-outline-danger">Desactivar</button>
-                  </div>
+                <td class="text-end text-nowrap">
+                  <button type="button" (click)="editCoverage(cov)" class="btn btn-sm btn-outline-primary" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button type="button" (click)="deleteCoverage(cov.id)" class="btn btn-sm btn-outline-danger ms-1" title="Desactivar">
+                    <i class="bi bi-trash3"></i>
+                  </button>
                 </td>
               </tr>
               <tr *ngIf="!coverages || coverages.length === 0">
-                <td colspan="5" class="text-center text-muted py-4">
+                <td colspan="5" class="text-center text-body-secondary py-4">
                   No hay coberturas asociadas a este plan de salud.
                 </td>
               </tr>
@@ -156,8 +158,8 @@
       </div>
 
       <!-- Footer -->
-      <div class="modal-footer border-0">
-        <button type="button" class="btn btn-secondary rounded-pill px-4" (click)="close()">Cerrar</button>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" (click)="close()">Cerrar</button>
       </div>
 
     </div>

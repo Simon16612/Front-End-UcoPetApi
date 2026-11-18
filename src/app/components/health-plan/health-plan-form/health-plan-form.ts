@@ -1,14 +1,16 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HealthPlanService } from '../../../services/health-plan/health-plan.service';
 import { HEALTH_PLAN_RULES } from '../../../utils/health-plan/form-rules';
+import { ToastService } from '../../../services/shared/toast.service';
+import { PageHeader } from '../../shared/page-header';
 
 @Component({
   selector: 'app-health-plan-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeader],
   templateUrl: './health-plan-form.html'
 })
 export class HealthPlanForm implements OnInit {
@@ -16,6 +18,7 @@ export class HealthPlanForm implements OnInit {
   isEditMode = false;
   planId: string | null = null;
   errorMessage: string | null = null;
+  private readonly toast = inject(ToastService);
 
   constructor(
     private fb: FormBuilder,
@@ -69,7 +72,10 @@ export class HealthPlanForm implements OnInit {
 
     if (this.isEditMode && this.planId) {
       this.healthPlanService.updateHealthPlan(this.planId, planPayload).subscribe({
-        next: () => this.router.navigate(['/polizas']),
+        next: () => {
+          this.toast.success(`"${planPayload.name}" quedó actualizada`);
+          this.router.navigate(['/polizas']);
+        },
         error: (err: any) => {
           console.error('Error al actualizar póliza:', err);
           this.errorMessage = err?.error?.message || 'Ocurrió un error al actualizar la póliza.';
@@ -78,7 +84,10 @@ export class HealthPlanForm implements OnInit {
       });
     } else {
       this.healthPlanService.createHealthPlan(planPayload).subscribe({
-        next: () => this.router.navigate(['/polizas']),
+        next: () => {
+          this.toast.success(`"${planPayload.name}" quedó creada`);
+          this.router.navigate(['/polizas']);
+        },
         error: (err: any) => {
           console.error('Error al crear póliza:', err);
           this.errorMessage = err?.error?.message || 'Ocurrió un error al guardar la póliza en la base de datos.';
