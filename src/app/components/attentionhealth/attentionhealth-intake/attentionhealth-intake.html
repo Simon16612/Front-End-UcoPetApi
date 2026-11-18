@@ -1,0 +1,75 @@
+<section class="container py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h1 class="h3 mb-1">Nueva atención</h1>
+      <p class="text-muted mb-0">Primero identifica al tutor y selecciona su mascota.</p>
+    </div>
+    <a routerLink="../" class="btn btn-outline-secondary">Volver</a>
+  </div>
+  @if (error()) {
+    <div class="alert alert-warning" role="alert">{{ error() }}</div>
+  }
+  <form class="card card-body" [formGroup]="form" (ngSubmit)="findTutor()">
+    <div class="row g-3 align-items-start">
+      <div class="col-12">
+        <label class="form-label" for="documentNumber">Número de documento del tutor *</label>
+      </div>
+      <div class="col-md-8">
+        <input
+          id="documentNumber"
+          class="form-control"
+          formControlName="documentNumber"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="Ej. 123456789"
+          aria-describedby="documentHelp"
+        />
+        <div id="documentHelp" class="form-text">
+          El documento debe corresponder a un tutor registrado.
+        </div>
+      </div>
+      <div class="col-md-4">
+        <button
+          class="btn btn-primary rounded-pill w-100"
+          type="submit"
+          [disabled]="loading() || searching()"
+        >
+          <span
+            class="spinner-border spinner-border-sm me-2"
+            [class.d-none]="!searching()"
+            aria-hidden="true"
+          ></span
+          >Buscar tutor
+        </button>
+      </div>
+    </div>
+    @if (form.controls.tutorId.value) {
+      <div class="alert alert-success mt-4 mb-0">
+        Tutor seleccionado:
+        <strong>{{ selectedTutorName() }}</strong>
+      </div>
+    }
+    <div class="mt-4">
+      <label class="form-label" for="petId">Mascota del tutor *</label
+      ><select id="petId" class="form-select" formControlName="petId">
+        <option value="">Selecciona una mascota</option>
+        @for (pet of pets(); track pet.id) {
+          <option [value]="pet.id">{{ pet.name }} · {{ pet.species }}</option>
+        }
+      </select>
+      @if (form.controls.tutorId.value && !pets().length && !searching()) {
+        <div class="form-text">El tutor no tiene mascotas disponibles para esta sede.</div>
+      }
+    </div>
+    <div class="d-flex justify-content-end mt-4">
+      <button
+        class="btn btn-primary"
+        type="button"
+        [disabled]="form.controls.petId.invalid"
+        (click)="continueToAttention()"
+      >
+        Continuar con la atención
+      </button>
+    </div>
+  </form>
+</section>
