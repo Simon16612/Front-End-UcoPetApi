@@ -65,7 +65,9 @@
       [class.is-invalid]="invalid('email')"
     />
     <div class="invalid-feedback">Escribe un correo válido (hasta 120 caracteres)</div>
-    <div class="form-text">Con este correo inicia sesión.</div>
+    @if (loginHint()) {
+      <div class="form-text">Con este correo inicia sesión.</div>
+    }
   </div>
   <div class="col-md-6">
     <label class="form-label" [for]="idPrefix() + '-phone'">Teléfono</label>

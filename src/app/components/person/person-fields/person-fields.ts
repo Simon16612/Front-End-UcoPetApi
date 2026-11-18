@@ -13,6 +13,7 @@ export class PersonFields {
   readonly form = input.required<PersonFieldsGroup>();
   readonly documentTypes = input<DocumentTypeOption[]>([]);
   readonly idPrefix = input('person');
+  readonly loginHint = input(true);
 
   protected invalid(field: keyof PersonFieldsGroup['controls']): boolean {
     const control = this.form().controls[field];

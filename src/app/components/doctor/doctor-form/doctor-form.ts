@@ -2,16 +2,21 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { Observable, map, retry, switchMap, timer } from 'rxjs';
 
 import { ModalFrame } from '../../shared/modal-frame';
+import { PersonFields } from '../../person/person-fields/person-fields';
 import { Doctor } from '../../../models/doctor/doctor.model';
 import { Headquarter } from '../../../models/headquarter/headquarter.model';
 import { PersonSummary } from '../../../models/person/person.model';
 import { DoctorService } from '../../../services/doctor/doctor.service';
 import { HeadquarterService } from '../../../services/headquarter/headquarter.service';
 import { PersonLookupService } from '../../../services/person/person-lookup.service';
+import { PersonService } from '../../../services/person/person.service';
 import { SessionService } from '../../../services/session/session.service';
 import { apiErrorMessage } from '../../../utils/shared/api-error';
+import { personFieldsGroup, toPerson } from '../../../utils/person/form-rules';
 import {
   UUID_RULES,
   licenseNumberRule,
@@ -19,14 +24,20 @@ import {
   shortId,
 } from '../../../utils/doctor/form-rules';
 
+const PERSON_SAVED_RETRIES = 8;
+const PERSON_SAVED_DELAY_MS = 750;
+
+type PersonSource = 'existing' | 'new';
+
 @Component({
   selector: 'app-doctor-form',
-  imports: [ReactiveFormsModule, ModalFrame],
+  imports: [ReactiveFormsModule, ModalFrame, PersonFields],
   templateUrl: './doctor-form.html',
 })
 export class DoctorForm implements OnInit {
   private readonly doctorService = inject(DoctorService);
   private readonly personLookup = inject(PersonLookupService);
+  private readonly personService = inject(PersonService);
   private readonly headquarterService = inject(HeadquarterService);
   private readonly session = inject(SessionService);
   private readonly fb = inject(NonNullableFormBuilder);
@@ -38,6 +49,12 @@ export class DoctorForm implements OnInit {
     // Por defecto, la sede activa del menú superior.
     headquarterId: [this.session.headquarterId() ?? '', Validators.required],
   });
+  protected readonly newPerson = personFieldsGroup(this.fb);
+  protected readonly documentTypes = toSignal(this.personService.documentTypes(), {
+    initialValue: [],
+  });
+  protected readonly source = signal<PersonSource>('existing');
+  protected readonly step = signal<string | null>(null);
   protected readonly doctorId = signal<string | null>(null);
   protected readonly saving = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -89,27 +106,68 @@ export class DoctorForm implements OnInit {
     });
   }
 
+  protected useSource(source: PersonSource): void {
+    this.source.set(source);
+    this.error.set(null);
+    const idPerson = this.form.controls.idPerson;
+    if (source === 'new') {
+      idPerson.disable();
+    } else {
+      idPerson.enable();
+    }
+  }
+
   protected save(): void {
-    if (this.form.invalid) {
+    const withNewPerson = this.source() === 'new';
+    if (this.form.invalid || (withNewPerson && this.newPerson.invalid)) {
       this.form.markAllAsTouched();
+      this.newPerson.markAllAsTouched();
       return;
     }
     const value = this.form.getRawValue();
-    const doctor: Doctor = {
-      idPerson: value.idPerson.trim(),
+    const doctorFor = (idPerson: string): Doctor => ({
+      idPerson,
       licenseNumber: value.licenseNumber.trim(),
       headquarterId: value.headquarterId,
-    };
+    });
     const id = this.doctorId();
     this.saving.set(true);
     this.error.set(null);
-    (id ? this.doctorService.update(id, doctor) : this.doctorService.create(doctor)).subscribe({
-      next: (saved) => this.modal.close({ ...doctor, ...saved }),
+    let request: Observable<Doctor>;
+    if (withNewPerson) {
+      this.step.set('Registrando a la persona...');
+      request = this.personService.create(toPerson(this.newPerson, false, true)).pipe(
+        switchMap((person) => {
+          this.step.set('Esperando a que el procesador guarde a la persona...');
+          return this.waitUntilSaved(person.id as string);
+        }),
+        switchMap((personId) => {
+          this.step.set('Registrando al médico...');
+          const doctor = doctorFor(personId);
+          return this.doctorService.create(doctor).pipe(map((saved) => ({ ...doctor, ...saved })));
+        }),
+      );
+    } else {
+      const doctor = doctorFor(value.idPerson.trim());
+      request = (
+        id ? this.doctorService.update(id, doctor) : this.doctorService.create(doctor)
+      ).pipe(map((saved) => ({ ...doctor, ...saved })));
+    }
+    request.subscribe({
+      next: (saved) => this.modal.close(saved),
       error: (error: HttpErrorResponse) => {
         this.saving.set(false);
+        this.step.set(null);
         this.error.set(apiErrorMessage(error, 'No se pudo guardar el médico'));
       },
     });
+  }
+
+  private waitUntilSaved(personId: string): Observable<string> {
+    return this.personService.getById(personId).pipe(
+      retry({ count: PERSON_SAVED_RETRIES, delay: () => timer(PERSON_SAVED_DELAY_MS) }),
+      map(() => personId),
+    );
   }
 
   protected invalid(field: keyof typeof this.form.controls): boolean {
