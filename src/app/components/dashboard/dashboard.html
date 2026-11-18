@@ -105,16 +105,7 @@
         </div>
       </div>
       <ul class="list-group list-group-flush">
-        @if (!session.headquarterId()) {
-          <li class="list-group-item d-flex gap-3 py-3">
-            <span class="uc-mark"><i class="bi bi-geo-alt"></i></span>
-            <div class="small">
-              <b class="d-block">Elige una sede</b>Con una sede activa, aquí aparecen los productos
-              que se están acabando.
-            </div>
-          </li>
-        } @else {
-          @for (item of (lowStock() ?? []).slice(0, 5); track item.id) {
+          @for (item of (lowStock() ?? []).slice(0, 5); track item.id + (item.headquarterId ?? '')) {
             <li class="list-group-item d-flex align-items-center gap-3 py-3">
               <span
                 class="uc-mark"
@@ -127,8 +118,8 @@
                 <b class="d-block">{{ item.name }}</b>
                 {{
                   (item.stockAtLocation ?? 0) === 0
-                    ? 'Sin unidades en esta sede'
-                    : 'Quedan ' + item.stockAtLocation + ' unidades'
+                    ? 'Sin unidades en ' + (item.headquarterId ? headquarterNames().get(item.headquarterId) : 'esta sede')
+                    : 'Quedan ' + item.stockAtLocation + ' unidades' + (item.headquarterId ? ' en ' + headquarterNames().get(item.headquarterId) : '')
                 }}
               </div>
               <a
@@ -141,12 +132,11 @@
             <li class="list-group-item d-flex gap-3 py-3">
               <span class="uc-mark is-teal"><i class="bi bi-check2-circle"></i></span>
               <div class="small">
-                <b class="d-block">Nada urgente</b>Ningún producto de esta sede tiene
+                <b class="d-block">Nada urgente</b>Ningún producto {{ session.headquarterId() ? 'de esta sede' : 'en ninguna sede' }} tiene
                 {{ lowStockLimit }} unidades o menos.
               </div>
             </li>
           }
-        }
         <li class="list-group-item d-flex gap-3 py-3">
           <span class="uc-mark is-warn"><i class="bi bi-calendar3"></i></span>
           <div class="small">

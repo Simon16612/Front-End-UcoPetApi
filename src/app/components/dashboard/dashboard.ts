@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { map } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 import { CatalogItem } from '../../models/product/catalog-item.model';
 import { CatalogService } from '../../services/product/catalog.service';
@@ -21,6 +22,10 @@ const LOW_STOCK = 5;
 export class Dashboard implements OnInit {
   private readonly catalogService = inject(CatalogService);
   private readonly headquarterService = inject(HeadquarterService);
+  protected readonly headquarterNames = toSignal(
+    this.headquarterService.list().pipe(map((list) => new Map(list.map((headquarter) => [headquarter.id, headquarter.name])))),
+    { initialValue: new Map<string, string>() },
+  );
   protected readonly session = inject(SessionService);
 
   protected readonly firstName = computed(
