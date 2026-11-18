@@ -27,12 +27,13 @@ import { apiErrorMessage } from '../../../utils/shared/api-error';
 
 import { injectConfirm } from '../../../services/shared/confirm';
 import { ToastService } from '../../../services/shared/toast.service';
+import { PageHeader } from '../../shared/page-header';
 
 type StatusFilter = OrderState | 'ALL';
 
 @Component({
   selector: 'app-order-list',
-  imports: [SortHeader, TablePager, DatePipe, HeadquarterSummary],
+  imports: [PageHeader, SortHeader, TablePager, DatePipe, HeadquarterSummary],
   templateUrl: './order-list.html',
 })
 export class OrderList {

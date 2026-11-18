@@ -23,12 +23,14 @@ import { apiErrorMessage } from '../../../utils/shared/api-error';
 
 import { injectConfirm } from '../../../services/shared/confirm';
 import { ToastService } from '../../../services/shared/toast.service';
+import { PageHeader } from '../../shared/page-header';
 
 type StatusFilter = 'active' | 'inactive' | 'all';
 
 @Component({
 selector: 'app-procedure-list',
 imports: [
+    PageHeader,
     SortHeader,
     TablePager,
     RouterLink,

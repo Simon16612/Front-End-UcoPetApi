@@ -1,3 +1,21 @@
+<app-page-header
+  eyebrow="Procesador Usuarios"
+  title="Médicos"
+  subtitle="Los médicos de cada sede y su tarjeta profesional"
+>
+  @if (session.isAdmin()) {
+    <button
+      type="button"
+      class="btn btn-primary btn-sm"
+      [disabled]="session.headquarterId() === null"
+      [title]="session.headquarterId() === null ? 'Elige una sede para crear un médico' : ''"
+      (click)="create()"
+    >
+      <i class="bi bi-plus-lg me-1"></i>Nuevo médico
+    </button>
+  }
+</app-page-header>
+
 <div class="card">
   <div class="card-header py-3">
     <div class="row g-2 align-items-center">
@@ -19,18 +37,6 @@
           <i class="bi bi-award me-1"></i>Especialidades de los médicos
         </a>
       </div>
-      @if (session.isAdmin()) {
-        <div class="col-auto">
-          <button
-            type="button"
-            class="btn btn-primary btn-sm"
-            [disabled]="session.headquarterId() === null"
-            (click)="create()"
-          >
-            <i class="bi bi-plus-lg me-1"></i>Nuevo médico
-          </button>
-        </div>
-      }
     </div>
   </div>
 

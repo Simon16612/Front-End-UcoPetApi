@@ -1,3 +1,15 @@
+<app-page-header
+  eyebrow="Procesador Usuarios"
+  title="Pacientes"
+  subtitle="Las mascotas atendidas en la clínica, su tutor y su sede"
+>
+  @if (session.isAdmin() && !tutorId()) {
+    <button type="button" class="btn btn-primary btn-sm" (click)="create()">
+      <i class="bi bi-plus-lg me-1"></i>Nueva mascota
+    </button>
+  }
+</app-page-header>
+
 <div class="card">
   <div class="card-header py-3">
     @if (tutorId()) {
@@ -62,19 +74,6 @@
             <option value="">Todos los estados</option>
           </select>
         </div>
-
-        @if (session.isAdmin()) {
-          <div class="col-auto">
-            <button
-              type="button"
-              class="btn btn-primary btn-sm"
-              (click)="create()"
-            >
-              <i class="bi bi-plus-lg me-1"></i>
-              Nueva mascota
-            </button>
-          </div>
-        }
       </div>
     }
   </div>

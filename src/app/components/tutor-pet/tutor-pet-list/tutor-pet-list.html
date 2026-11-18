@@ -3,11 +3,9 @@
   title="Tutores de mascotas"
   subtitle="Personas registradas como responsables de mascotas."
 >
-  @if (sessionIsAdmin()) {
-    <button type="button" class="btn btn-primary" (click)="create()">
-      <i class="bi bi-plus-lg me-1"></i>Nuevo tutor
-    </button>
-  }
+  <button type="button" class="btn btn-primary" (click)="create()">
+    <i class="bi bi-plus-lg me-1"></i>Nuevo tutor
+  </button>
 </app-page-header>
 
 <div class="card">
@@ -113,7 +111,7 @@
                 <app-empty-state
                   icon="bi-people"
                   title="No hay tutores con estos filtros"
-                  text="Registra una relación entre una persona existente y el rol de tutor."
+                  text="Registra un tutor con una persona existente o con una persona nueva."
                 />
               </td>
             </tr>

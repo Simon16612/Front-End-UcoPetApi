@@ -22,10 +22,12 @@ import { apiErrorMessage } from '../../../utils/shared/api-error';
 
 import { injectConfirm } from '../../../services/shared/confirm';
 import { ToastService } from '../../../services/shared/toast.service';
+import { PageHeader } from '../../shared/page-header';
 
 @Component({
   selector: 'app-pet-list',
   imports: [
+    PageHeader,
     SortHeader,
     TablePager,
     RouterLink,

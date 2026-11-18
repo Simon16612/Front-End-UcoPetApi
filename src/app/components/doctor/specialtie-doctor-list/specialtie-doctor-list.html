@@ -1,3 +1,21 @@
+<app-page-header
+  eyebrow="Procesador Usuarios"
+  title="Especialidades de los médicos"
+  subtitle="Qué especialidad tiene cada médico"
+>
+  @if (session.isAdmin()) {
+    <button
+      type="button"
+      class="btn btn-primary btn-sm"
+      [disabled]="session.headquarterId() === null"
+      [title]="session.headquarterId() === null ? 'Elige una sede para asignar una especialidad' : ''"
+      (click)="create()"
+    >
+      <i class="bi bi-plus-lg me-1"></i>Asignar especialidad
+    </button>
+  }
+</app-page-header>
+
 <div class="card">
   <div class="card-header py-3">
     <div class="row g-2 align-items-center">
@@ -32,18 +50,6 @@
               <option [value]="option.id">{{ option.label }}</option>
             }
           </select>
-        </div>
-      }
-      @if (session.isAdmin()) {
-        <div class="col-auto">
-          <button
-            type="button"
-            class="btn btn-primary btn-sm"
-            [disabled]="session.headquarterId() === null"
-            (click)="create()"
-          >
-            <i class="bi bi-plus-lg me-1"></i>Asignar especialidad
-          </button>
         </div>
       }
     </div>

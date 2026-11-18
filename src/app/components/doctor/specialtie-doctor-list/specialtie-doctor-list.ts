@@ -24,12 +24,13 @@ import { injectConfirm } from '../../../services/shared/confirm';
 import { ToastService } from '../../../services/shared/toast.service';
 import { apiErrorMessage } from '../../../utils/shared/api-error';
 import { personName, shortId } from '../../../utils/doctor/form-rules';
+import { PageHeader } from '../../shared/page-header';
 
 const PROCESSOR_DELAY_MS = 1500;
 
 @Component({
   selector: 'app-specialtie-doctor-list',
-  imports: [RouterLink, SortHeader, TablePager, HeadquarterSummary],
+  imports: [PageHeader, RouterLink, SortHeader, TablePager, HeadquarterSummary],
   templateUrl: './specialtie-doctor-list.html',
 })
 export class SpecialtieDoctorList {

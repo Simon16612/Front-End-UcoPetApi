@@ -20,6 +20,7 @@ import { injectConfirm } from '../../../services/shared/confirm';
 import { ToastService } from '../../../services/shared/toast.service';
 import { apiErrorMessage } from '../../../utils/shared/api-error';
 import { personName, shortId } from '../../../utils/doctor/form-rules';
+import { PageHeader } from '../../shared/page-header';
 
 // El procesador aplica los cambios de forma asíncrona (RabbitMQ): tras guardar, la lista
 // se vuelve a pedir enseguida y una segunda vez un momento después.
@@ -27,7 +28,7 @@ const PROCESSOR_DELAY_MS = 1500;
 
 @Component({
   selector: 'app-doctor-list',
-  imports: [RouterLink, SortHeader, TablePager, HeadquarterSummary],
+  imports: [PageHeader, RouterLink, SortHeader, TablePager, HeadquarterSummary],
   templateUrl: './doctor-list.html',
 })
 export class DoctorList {

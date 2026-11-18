@@ -1,3 +1,13 @@
+<app-page-header
+  eyebrow="Procesador Salud"
+  title="Procedimientos"
+  subtitle="Los procedimientos que se le hacen a los pacientes y su duración"
+>
+  <button type="button" class="btn btn-primary btn-sm" (click)="create()">
+    <i class="bi bi-plus-lg me-1"></i>Nuevo procedimiento
+  </button>
+</app-page-header>
+
 <div class="card">
 <div class="card-header py-3">
     <div class="row g-2 align-items-center">
@@ -32,16 +42,6 @@
         </select>
     </div>
 
-    <div class="col-auto">
-        <button
-        type="button"
-        class="btn btn-primary btn-sm"
-        (click)="create()"
-        >
-        <i class="bi bi-plus-lg me-1"></i>
-        Nuevo procedimiento
-        </button>
-    </div>
 
     </div>
 </div>
