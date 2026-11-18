@@ -137,13 +137,40 @@
               </div>
             </li>
           }
-        <li class="list-group-item d-flex gap-3 py-3">
-          <span class="uc-mark is-warn"><i class="bi bi-calendar3"></i></span>
-          <div class="small">
-            <b class="d-block">Citas e historias sin cerrar</b>Aparecerán aquí cuando el módulo de
-            Agenda esté construido.
-          </div>
-        </li>
+        @if (agenda(); as agenda) {
+          <li class="list-group-item d-flex align-items-center gap-3 py-3">
+            <span class="uc-mark" [class]="agenda.today > 0 ? 'is-warn' : 'is-teal'"
+              ><i class="bi bi-calendar3"></i
+            ></span>
+            <div class="small flex-grow-1">
+              @if (agenda.today > 0) {
+                <b class="d-block"
+                  >{{ agenda.today }} {{ agenda.today === 1 ? 'cita' : 'citas' }} por atender hoy</b
+                >
+                @if (agenda.next; as next) {
+                  La próxima es a las {{ timeLabel(next.appointmentTime) }} con
+                  {{ next.petName ?? 'la mascota' }}.
+                }
+              } @else {
+                <b class="d-block">Sin citas por atender hoy</b>No hay citas pendientes ni
+                confirmadas para lo que queda del día.
+              }
+            </div>
+            <a class="btn btn-light btn-sm" routerLink="/agenda">Agenda</a>
+          </li>
+          @if (agenda.expired > 0) {
+            <li class="list-group-item d-flex align-items-center gap-3 py-3">
+              <span class="uc-mark is-danger"><i class="bi bi-clock-history"></i></span>
+              <div class="small flex-grow-1">
+                <b class="d-block"
+                  >{{ agenda.expired }}
+                  {{ agenda.expired === 1 ? 'cita vencida' : 'citas vencidas' }} sin confirmar</b
+                >Su hora pasó y siguen pendientes: solo se pueden cancelar.
+              </div>
+              <a class="btn btn-light btn-sm" routerLink="/agenda">Revisar</a>
+            </li>
+          }
+        }
       </ul>
     </div>
   </div>

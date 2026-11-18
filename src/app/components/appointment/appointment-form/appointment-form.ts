@@ -141,9 +141,16 @@ export class AppointmentForm {
   }
 
   // `existing` son las citas ya cargadas en la lista; `appointment` es la cita a editar (null al crear).
-  start(existing: Appointment[], appointment: Appointment | null = null): void {
+  start(
+    existing: Appointment[],
+    appointment: Appointment | null = null,
+    slot: { date: string; time: string } | null = null,
+  ): void {
     this.existing.set(existing);
     this.editing.set(appointment);
+    if (!appointment && slot) {
+      this.form.patchValue({ appointmentDate: slot.date, appointmentTime: slot.time });
+    }
     this.loadingOptions.set(true);
     const admin = this.isAdmin();
     forkJoin({

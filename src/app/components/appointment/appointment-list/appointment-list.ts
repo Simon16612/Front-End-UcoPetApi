@@ -30,10 +30,18 @@ import { EmptyState } from '../../shared/empty-state';
 import { KpiCard } from '../../shared/kpi-card';
 import { TablePager } from '../../shared/table-pager';
 import { AppointmentFormResult } from '../appointment-form/appointment-form';
+import {
+  AppointmentCalendar,
+  CalendarAction,
+  CalendarSlot,
+} from '../appointment-calendar/appointment-calendar';
+
+type AgendaMode = 'calendar' | 'list';
+const MODE_KEY = 'ucopet.agenda.mode';
 
 @Component({
   selector: 'app-appointment-list',
-  imports: [RouterLink, SortHeader, TablePager, KpiCard, EmptyState],
+  imports: [RouterLink, SortHeader, TablePager, KpiCard, EmptyState, AppointmentCalendar],
   templateUrl: './appointment-list.html',
 })
 export class AppointmentList {
@@ -53,6 +61,8 @@ export class AppointmentList {
     { value: 'all', label: 'Todas' },
   ];
   protected readonly statuses = APPOINTMENT_STATUSES;
+
+  protected readonly mode = signal<AgendaMode>(readMode());
 
   // Filtros del navegador
   protected readonly search = signal('');
@@ -90,6 +100,14 @@ export class AppointmentList {
         doctorId: this.doctor(),
         search: this.search(),
       },
+      todayIso(),
+    ),
+  );
+
+  protected readonly calendarItems = computed(() =>
+    filterAppointments(
+      this.appointments(),
+      { period: 'all', status: this.status(), doctorId: this.doctor(), search: this.search() },
       todayIso(),
     ),
   );
@@ -145,6 +163,44 @@ export class AppointmentList {
 
   protected create(): void {
     this.dialogs.appointment(this.appointments()).subscribe((result) => this.afterSubmit(result));
+  }
+
+  protected setMode(mode: AgendaMode): void {
+    this.mode.set(mode);
+    try {
+      localStorage.setItem(MODE_KEY, mode);
+    } catch {
+      return;
+    }
+  }
+
+  protected createAt(slot: CalendarSlot): void {
+    this.dialogs
+      .appointment(this.appointments(), null, slot)
+      .subscribe((result) => this.afterSubmit(result));
+  }
+
+  protected onCalendarAction({ kind, appointment }: CalendarAction): void {
+    switch (kind) {
+      case 'confirm':
+        this.confirmAppointment(appointment);
+        break;
+      case 'complete':
+        this.complete(appointment);
+        break;
+      case 'cancel':
+        this.cancel(appointment);
+        break;
+      case 'reactivate':
+        this.reactivate(appointment);
+        break;
+      case 'edit':
+        this.edit(appointment);
+        break;
+      case 'remove':
+        this.remove(appointment);
+        break;
+    }
   }
 
   protected edit(appointment: Appointment): void {
@@ -273,5 +329,13 @@ export class AppointmentList {
       }
       return next;
     });
+  }
+}
+
+function readMode(): AgendaMode {
+  try {
+    return localStorage.getItem(MODE_KEY) === 'list' ? 'list' : 'calendar';
+  } catch {
+    return 'calendar';
   }
 }

@@ -20,13 +20,14 @@ export class AppointmentDialogs {
   appointment(
     existing: Appointment[],
     appointment: Appointment | null = null,
+    slot: { date: string; time: string } | null = null,
   ): Observable<AppointmentFormResult> {
     const ref = this.modalService.open(AppointmentForm, {
       size: 'lg',
       backdrop: 'static',
       scrollable: true,
     });
-    ref.componentInstance.start(existing, appointment);
+    ref.componentInstance.start(existing, appointment, slot);
     return from(ref.result as Promise<AppointmentFormResult>).pipe(catchError(() => EMPTY));
   }
 

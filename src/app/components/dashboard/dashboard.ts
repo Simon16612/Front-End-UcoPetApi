@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { map } from 'rxjs';
+import { catchError, map, of } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 import { CatalogItem } from '../../models/product/catalog-item.model';
@@ -11,6 +11,11 @@ import { SessionService } from '../../services/session/session.service';
 import { KpiCard } from '../shared/kpi-card';
 import { HeadquarterSummary } from '../shared/headquarter-summary';
 import { acrossHeadquarters } from '../../utils/shared/across-headquarters';
+import { Appointment } from '../../models/appointment/appointment.model';
+import { AppointmentService } from '../../services/appointment/appointment.service';
+import { isExpired } from '../../utils/appointment/appointment-actions';
+import { timeLabel } from '../../utils/appointment/appointment-labels';
+import { todayIso } from '../../utils/appointment/appointment-schedule';
 
 const LOW_STOCK = 5;
 
@@ -27,6 +32,33 @@ export class Dashboard implements OnInit {
     { initialValue: new Map<string, string>() },
   );
   protected readonly session = inject(SessionService);
+  private readonly appointments = toSignal(
+    inject(AppointmentService)
+      .list()
+      .pipe(catchError(() => of(null as Appointment[] | null))),
+    { initialValue: null as Appointment[] | null },
+  );
+  protected readonly agenda = computed(() => {
+    const list = this.appointments();
+    if (list === null) {
+      return null;
+    }
+    const today = todayIso();
+    const pendingToday = list
+      .filter(
+        (appointment) =>
+          appointment.appointmentDate === today &&
+          (appointment.status === 'PENDING' || appointment.status === 'CONFIRMED') &&
+          !isExpired(appointment),
+      )
+      .sort((a, b) => a.appointmentTime.localeCompare(b.appointmentTime));
+    return {
+      today: pendingToday.length,
+      next: pendingToday[0] ?? null,
+      expired: list.filter((appointment) => isExpired(appointment)).length,
+    };
+  });
+  protected readonly timeLabel = timeLabel;
 
   protected readonly firstName = computed(
     () => (this.session.profile()?.fullName ?? '').split(' ')[0],

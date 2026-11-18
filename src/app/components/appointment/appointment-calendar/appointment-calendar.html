@@ -1,0 +1,234 @@
+<div class="cal-toolbar">
+  <div class="d-flex align-items-center gap-2 flex-wrap">
+    <button type="button" class="btn btn-light btn-sm" (click)="today()">
+      <i class="bi bi-calendar-check me-1"></i>Hoy
+    </button>
+    <div class="btn-group btn-group-sm" role="group" aria-label="Moverse en el calendario">
+      <button type="button" class="btn btn-light" aria-label="Anterior" (click)="move(-1)">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <button type="button" class="btn btn-light" aria-label="Siguiente" (click)="move(1)">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+    <h2 class="h6 mb-0 cal-range">{{ rangeLabel() }}</h2>
+    <span class="small text-body-secondary">
+      {{ counts().active }} por atender · {{ counts().total }} en total
+    </span>
+  </div>
+  <div class="btn-group btn-group-sm" role="group" aria-label="Vista del calendario">
+    @for (option of views; track option.value) {
+      <button
+        type="button"
+        class="btn btn-outline-primary"
+        [class.active]="view() === option.value"
+        (click)="setView(option.value)"
+      >
+        <i class="bi me-1" [class]="option.icon"></i>{{ option.label }}
+      </button>
+    }
+  </div>
+</div>
+
+<div class="cal" [style.--cal-days]="days().length">
+  <div class="cal-head">
+    <div class="cal-gutter"></div>
+    @for (day of days(); track day.iso) {
+      <button
+        type="button"
+        class="cal-day-head"
+        [class.is-today]="day.isToday"
+        [title]="'Ver solo el ' + dateTitle(day.iso)"
+        (click)="openDay(day)"
+      >
+        <span class="cal-weekday">{{ day.weekday }}</span>
+        <span class="cal-daynum">{{ day.dayNumber }}</span>
+      </button>
+    }
+  </div>
+
+  <div class="cal-body" #scroller>
+    <div class="cal-grid" [style.height.px]="gridHeight()">
+      <div class="cal-gutter">
+        @for (hour of hours(); track hour) {
+          <div class="cal-hour-label" [style.height.px]="hourPx">
+            {{ hour < 10 ? '0' + hour : hour }}:00
+          </div>
+        }
+      </div>
+      @for (day of days(); track day.iso) {
+        <div
+          class="cal-col"
+          [class.is-today]="day.isToday"
+          [class.is-past]="day.isPast"
+          [style.--cal-hour]="hourPx + 'px'"
+          [title]="day.isPast ? '' : 'Clic en un espacio libre para agendar a esa hora'"
+          (click)="pickSlot(day, $event)"
+        >
+          @if (day.isToday && nowTop() !== null) {
+            <div class="cal-now" [style.top.px]="nowTop()"></div>
+          }
+          @for (item of placed().get(day.iso) ?? []; track item.appointment.id) {
+            @let appointment = item.appointment;
+            <button
+              type="button"
+              class="cal-event"
+              [class]="item.tone"
+              [class.is-busy]="isProcessing(appointment.id)"
+              [style.top.px]="item.top"
+              [style.height.px]="item.height"
+              [style.left.%]="item.left"
+              [style.width]="'calc(' + item.width + '% - 4px)'"
+              [ngbPopover]="details"
+              [popoverContext]="{ $implicit: appointment }"
+              #popover="ngbPopover"
+              placement="auto"
+              container="body"
+              autoClose="outside"
+              popoverClass="cal-popover"
+              (click)="$event.stopPropagation()"
+            >
+              <span class="cal-event-line">
+                @if (isProcessing(appointment.id)) {
+                  <span class="spinner-border spinner-border-sm me-1"></span>
+                }
+                <b>{{ timeLabel(appointment.appointmentTime) }}</b>
+                {{ appointment.petName ?? 'Sin mascota' }}
+              </span>
+              <span class="cal-event-sub">
+                {{ appointment.appointmentTypeName ?? 'Sin tipo' }}
+                @if (showDoctor()) {
+                  · {{ appointment.doctorName ?? 'Sin médico' }}
+                }
+              </span>
+            </button>
+
+            <ng-template #details let-appointment>
+              @let actions = allowedActions(appointment);
+              <div class="cal-card">
+                <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                  <div>
+                    <div class="fw-bold fs-6">{{ appointment.petName ?? 'Sin mascota' }}</div>
+                    <div class="small text-body-secondary">
+                      {{ appointment.appointmentTypeName ?? 'Sin tipo' }}
+                    </div>
+                  </div>
+                  @if (isExpired(appointment)) {
+                    <span class="uc-tag is-danger"><i class="bi bi-clock-history"></i>Vencida</span>
+                  } @else {
+                    <span
+                      class="uc-tag"
+                      [class]="
+                        item.tone === 'is-pending'
+                          ? 'is-warn'
+                          : item.tone === 'is-confirmed'
+                            ? 'is-info'
+                            : item.tone === 'is-completed'
+                              ? 'is-ok'
+                              : 'is-neutral'
+                      "
+                    >
+                      <i class="bi" [class]="statusIcon(appointment.status)"></i
+                      >{{ statusLabel(appointment.status) }}
+                    </span>
+                  }
+                </div>
+                <ul class="list-unstyled small mb-3 cal-facts">
+                  <li>
+                    <i class="bi bi-clock"></i>{{ dateTitle(appointment.appointmentDate) }},
+                    {{ timeLabel(appointment.appointmentTime) }}
+                  </li>
+                  <li>
+                    <i class="bi bi-person"></i>Tutor: {{ appointment.tutorName ?? 'Sin dato' }}
+                  </li>
+                  <li>
+                    <i class="bi bi-person-badge"></i>Médico:
+                    {{ appointment.doctorName ?? 'Sin dato' }}
+                  </li>
+                  @if (appointment.status === 'CANCELLED' && appointment.cancellationReason) {
+                    <li>
+                      <i class="bi bi-chat-left-text"></i>{{ appointment.cancellationReason }}
+                    </li>
+                  }
+                </ul>
+                <div class="d-flex flex-wrap gap-1">
+                  @if (actions.confirm) {
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-success"
+                      [disabled]="isProcessing(appointment.id)"
+                      (click)="run('confirm', appointment, popover)"
+                    >
+                      <i class="bi bi-check2 me-1"></i>Confirmar
+                    </button>
+                  }
+                  @if (actions.complete) {
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-success"
+                      [disabled]="isProcessing(appointment.id)"
+                      (click)="run('complete', appointment, popover)"
+                    >
+                      <i class="bi bi-check2-all me-1"></i>Completar
+                    </button>
+                  }
+                  @if (actions.reactivate) {
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-secondary"
+                      [disabled]="isProcessing(appointment.id)"
+                      (click)="run('reactivate', appointment, popover)"
+                    >
+                      <i class="bi bi-arrow-counterclockwise me-1"></i>Reactivar
+                    </button>
+                  }
+                  @if (actions.edit) {
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-primary"
+                      [disabled]="isProcessing(appointment.id)"
+                      (click)="run('edit', appointment, popover)"
+                    >
+                      <i class="bi bi-pencil me-1"></i>Reprogramar
+                    </button>
+                  }
+                  @if (actions.cancel) {
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-warning"
+                      [disabled]="isProcessing(appointment.id)"
+                      (click)="run('cancel', appointment, popover)"
+                    >
+                      <i class="bi bi-x-circle me-1"></i>Cancelar
+                    </button>
+                  }
+                  @if (canRemove()) {
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-danger"
+                      title="Eliminar"
+                      aria-label="Eliminar"
+                      [disabled]="isProcessing(appointment.id)"
+                      (click)="run('remove', appointment, popover)"
+                    >
+                      <i class="bi bi-trash3"></i>
+                    </button>
+                  }
+                </div>
+              </div>
+            </ng-template>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<div class="cal-legend small text-body-secondary">
+  <span><i class="cal-dot is-pending"></i>Pendiente</span>
+  <span><i class="cal-dot is-confirmed"></i>Confirmada</span>
+  <span><i class="cal-dot is-completed"></i>Completada</span>
+  <span><i class="cal-dot is-cancelled"></i>Cancelada</span>
+  <span><i class="cal-dot is-expired"></i>Vencida</span>
+  <span class="ms-auto d-none d-md-inline">Clic en un espacio libre para agendar a esa hora</span>
+</div>

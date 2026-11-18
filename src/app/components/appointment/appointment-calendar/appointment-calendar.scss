@@ -1,0 +1,270 @@
+:host {
+  display: block;
+}
+
+.cal-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--uc-line);
+}
+
+.cal-range {
+  text-transform: capitalize;
+  font-weight: 800;
+}
+
+.cal {
+  --cal-gutter: 3.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.cal-head {
+  display: grid;
+  grid-template-columns: var(--cal-gutter) repeat(var(--cal-days), minmax(0, 1fr));
+  border-bottom: 1px solid var(--uc-line);
+  background: #fff;
+}
+
+.cal-day-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.25rem;
+  border: 0;
+  border-left: 1px solid var(--uc-line);
+  background: transparent;
+  color: var(--uc-ink);
+  font-size: 0.8rem;
+  text-transform: capitalize;
+
+  &:hover {
+    background: #f6f8fd;
+  }
+
+  &.is-today {
+    color: var(--uc-blue);
+    font-weight: 800;
+
+    .cal-daynum {
+      color: #fff;
+      background: var(--uc-blue);
+    }
+  }
+}
+
+.cal-daynum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  color: var(--uc-navy);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.cal-body {
+  max-height: 34rem;
+  overflow-y: auto;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: var(--cal-gutter) repeat(var(--cal-days), minmax(0, 1fr));
+  position: relative;
+}
+
+.cal-gutter {
+  position: relative;
+}
+
+.cal-hour-label {
+  position: relative;
+  top: -0.55rem;
+  padding-right: 0.5rem;
+  text-align: right;
+  color: var(--uc-ink);
+  font-size: 0.7rem;
+  font-weight: 700;
+
+  &:first-child {
+    visibility: hidden;
+  }
+}
+
+.cal-col {
+  position: relative;
+  border-left: 1px solid var(--uc-line);
+  cursor: pointer;
+  background-image:
+    linear-gradient(to bottom, var(--uc-line) 1px, transparent 1px),
+    linear-gradient(to bottom, #f1f3f9 1px, transparent 1px);
+  background-size:
+    100% var(--cal-hour),
+    100% calc(var(--cal-hour) / 2);
+
+  &:hover {
+    background-color: #fbfcff;
+  }
+
+  &.is-today {
+    background-color: #f7faff;
+  }
+
+  &.is-past {
+    cursor: default;
+    background-color: #fafbfd;
+  }
+}
+
+.cal-now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  height: 2px;
+  background: #e2445c;
+  pointer-events: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: -4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #e2445c;
+  }
+}
+
+.cal-event {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-left: 2px;
+  padding: 0.1rem 0.45rem;
+  overflow: hidden;
+  border: 0;
+  border-left: 4px solid;
+  border-radius: 0.4rem;
+  text-align: left;
+  line-height: 1.15;
+  box-shadow: 0 1px 2px rgba(21, 32, 70, 0.08);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    z-index: 4;
+    box-shadow: 0 6px 16px -6px rgba(21, 32, 70, 0.35);
+    transform: translateY(-1px);
+  }
+
+  &.is-busy {
+    opacity: 0.6;
+  }
+}
+
+.cal-event-line,
+.cal-event-sub {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cal-event-line {
+  font-size: 0.75rem;
+}
+
+.cal-event-sub {
+  font-size: 0.68rem;
+  opacity: 0.85;
+}
+
+.is-pending {
+  color: #8a5a00;
+  background: #fff6e7;
+  border-color: #e08a0b;
+}
+
+.is-confirmed {
+  color: #20418f;
+  background: #edf3ff;
+  border-color: #2f6bf0;
+}
+
+.is-completed {
+  color: #0b6e4f;
+  background: #e6faf3;
+  border-color: #12a97c;
+}
+
+.is-cancelled {
+  color: #6c7396;
+  background: #f1f4fb;
+  border-color: #b8bfd3;
+
+  .cal-event-line {
+    text-decoration: line-through;
+  }
+}
+
+.is-expired {
+  color: #a22334;
+  background: #fdeef0;
+  border-color: #e2445c;
+}
+
+.cal-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--uc-line);
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+}
+
+.cal-dot {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 0.2rem;
+  border-left: 4px solid;
+}
+
+::ng-deep .cal-popover {
+  max-width: 22rem;
+  border: 1px solid var(--uc-line);
+  border-radius: 0.85rem;
+  box-shadow: var(--uc-shadow);
+
+  .popover-body {
+    padding: 1rem;
+    color: var(--uc-navy);
+  }
+
+  .cal-facts li {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.15rem 0;
+
+    i {
+      color: var(--uc-ink);
+    }
+  }
+}
