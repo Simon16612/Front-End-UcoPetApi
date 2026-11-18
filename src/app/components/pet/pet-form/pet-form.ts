@@ -162,8 +162,9 @@ export class PetForm implements OnInit {
         );
 
         // Mostrar únicamente las sedes activas
+        const ownHeadquarter = this.session.isAdmin() ? null : this.session.headquarterId();
         const activeHeadquarters = headquarters.filter(
-          headquarters => headquarters.isActive
+          headquarters => headquarters.isActive && (ownHeadquarter === null || headquarters.id === ownHeadquarter)
         );
 
         this.headquarters.set(activeHeadquarters);

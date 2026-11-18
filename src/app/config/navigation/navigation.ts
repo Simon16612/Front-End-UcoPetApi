@@ -69,7 +69,7 @@ export const NAVIGATION: NavGroup[] = [
         icon: 'bi-people',
         roles: BOTH,
         description: 'Responsables de las mascotas y su relación con cada paciente.',
-        api: [{ base: '/api/v1/tutorPet', rule: 'leer ADMIN y DOCTOR · escribir ADMIN' }],
+        api: [{ base: '/api/v1/tutorPet', rule: 'leer y crear ADMIN y DOCTOR · editar ADMIN' }],
       },
       {
         path: 'mascotas',
@@ -80,7 +80,7 @@ export const NAVIGATION: NavGroup[] = [
         icon: 'bi-heart',
         roles: BOTH,
         description: 'Las mascotas atendidas en la clínica.',
-        api: [{ base: '/api/v1/pets', rule: 'leer ADMIN y DOCTOR · escribir ADMIN' }],
+        api: [{ base: '/api/v1/pets', rule: 'leer y crear ADMIN y DOCTOR · editar ADMIN' }],
       },
       {
         path: 'notificaciones',

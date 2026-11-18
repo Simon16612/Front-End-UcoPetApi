@@ -3,7 +3,7 @@
   title="Pacientes"
   subtitle="Las mascotas atendidas en la clínica, su tutor y su sede"
 >
-  @if (session.isAdmin() && !tutorId()) {
+  @if (!tutorId()) {
     <button type="button" class="btn btn-primary btn-sm" (click)="create()">
       <i class="bi bi-plus-lg me-1"></i>Nueva mascota
     </button>
