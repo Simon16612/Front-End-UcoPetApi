@@ -64,6 +64,7 @@ export const NAVIGATION: NavGroup[] = [
         path: 'tutores',
         entity: 'tutor-pet',
         label: 'Tutores',
+        ready: true,
         loadChildren: () =>
           import('../../routes/tutor-pet/tutor-pet.routes').then((m) => m.TUTOR_PET_ROUTES),
         icon: 'bi-people',
@@ -106,6 +107,7 @@ export const NAVIGATION: NavGroup[] = [
         path: 'agenda',
         entity: 'appointment',
         label: 'Agenda',
+        ready: true,
         loadChildren: () =>
           import('../../routes/appointment/appointment.routes').then((m) => m.APPOINTMENT_ROUTES),
         icon: 'bi-calendar3',
@@ -133,6 +135,7 @@ export const NAVIGATION: NavGroup[] = [
         path: 'procedimientos',
         entity: 'procedure',
         label: 'Procedimientos',
+        ready: true,
         loadChildren: () =>
           import('../../routes/procedure/procedure.routes').then((m) => m.PROCEDURE_ROUTES),
         icon: 'bi-bandaid',
@@ -197,6 +200,7 @@ export const NAVIGATION: NavGroup[] = [
         path: 'compras',
         entity: 'purchases',
         label: 'Compras',
+        ready: true,
         loadChildren: () =>
           import('../../routes/purchases/purchases.routes').then((m) => m.PURCHASES_ROUTES),
         icon: 'bi-bag-check',
