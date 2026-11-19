@@ -108,7 +108,12 @@ export class OrderList {
       .pipe(catchError(() => of([] as Procedure[])))
       .subscribe((procedures) => this.procedures.set(procedures));
 
-    acrossHeadquarters(this.headquarterService.list(), (id) => this.petService.getByHeadquarter({ headquarterId: id }))
+    const ownHeadquarter = this.session.isAdmin() ? null : this.session.headquarterId();
+
+    (ownHeadquarter === null
+      ? acrossHeadquarters(this.headquarterService.list(), (id) => this.petService.getByHeadquarter({ headquarterId: id }))
+      : this.petService.getByHeadquarter({ headquarterId: ownHeadquarter })
+    )
       .pipe(catchError(() => of([] as Pet[])))
       .subscribe((pets) => this.pets.set(pets));
 
