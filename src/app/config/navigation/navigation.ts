@@ -52,7 +52,7 @@ export const NAVIGATION: NavGroup[] = [
         path: 'medicos',
         entity: 'doctor',
         label: 'Médicos',
-         ready: true,
+        ready: true,
         loadChildren: () =>
           import('../../routes/doctor/doctor.routes').then((m) => m.DOCTOR_ROUTES),
         icon: 'bi-person-badge',
@@ -115,19 +115,16 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         path: 'atenciones',
-        entity: 'pet-care',
+        entity: 'attentionhealth',
         label: 'Atenciones',
         loadChildren: () =>
-          import('../../routes/pet-care/pet-care.routes').then((m) => m.PET_CARE_ROUTES),
+          import('../../routes/attentionhealth/attentionhealth.routes').then(
+            (m) => m.ATTENTION_HEALTH_ROUTES,
+          ),
         icon: 'bi-clipboard2-pulse',
-        roles: BOTH,
+        roles: ['DOCTOR'],
         description: 'Atención del paciente, signos vitales, episodios y certificados.',
-        api: [
-          { base: '/api/v1/petcares', rule: 'ADMIN y DOCTOR' },
-          { base: '/api/v1/vitalsigns', rule: 'ADMIN y DOCTOR' },
-          { base: '/api/v1/episodes', rule: 'ADMIN y DOCTOR' },
-          { base: '/api/v1/certificate', rule: 'ADMIN y DOCTOR' },
-        ],
+        api: [{ base: '/api/v1/attentionhealth', rule: 'DOCTOR' }],
       },
       {
         path: 'procedimientos',
@@ -151,7 +148,7 @@ export const NAVIGATION: NavGroup[] = [
         description: 'Órdenes de procedimiento y su autorización.',
         api: [{ base: '/api/v1/orders', rule: 'ADMIN y DOCTOR' }],
       },
-           {
+      {
         path: 'espacios',
         entity: 'space',
         label: 'Espacios',
@@ -191,7 +188,7 @@ export const NAVIGATION: NavGroup[] = [
         roles: ADMIN,
         description: 'Venta de productos y servicios del catálogo.',
         api: [{ base: '/api/v1/sales', rule: 'ADMIN · órdenes e ítems' }],
-        ready: true
+        ready: true,
       },
       {
         path: 'compras',
@@ -257,7 +254,8 @@ export const NAVIGATION: NavGroup[] = [
       {
         path: 'sedes',
         entity: 'headquarter',
-        label: 'Sedes', ready: true,
+        label: 'Sedes',
+        ready: true,
         loadChildren: () =>
           import('../../routes/headquarter/headquarter.routes').then((m) => m.HEADQUARTER_ROUTES),
         icon: 'bi-buildings',
@@ -304,27 +302,28 @@ export const NAVIGATION: NavGroup[] = [
         icon: 'bi-cash-coin',
         roles: ADMIN,
         description: 'Recibos de caja y métodos de pago.',
-        ready : true,
+        ready: true,
         api: [
           { base: '/api/v1/receipts', rule: 'ADMIN' },
           { base: '/api/v1/PayMethods', rule: 'ADMIN' },
         ],
       },
-        {
-          path: 'egresos',
-          entity: 'egress',
-          label: 'Egresos',
-          ready: true,
-          loadChildren: () =>
-            import('../../routes/egress/egress.routes').then((m) => m.EGRESS_ROUTES),
-          icon: 'bi-wallet2',
-          roles: ADMIN,
-          description: 'Pagos a proveedores por órdenes de compra.',
-          api: [
-            { base: '/api/v1/Egresses', rule: 'ADMIN' },
-            { base: '/api/v1/providers', rule: 'ADMIN · solo lectura' },
-            { base: '/api/v1/purchases', rule: 'ADMIN · solo lectura' },
-            { base: '/api/v1/PayMethods', rule: 'ADMIN · solo lectura' }],
+      {
+        path: 'egresos',
+        entity: 'egress',
+        label: 'Egresos',
+        ready: true,
+        loadChildren: () =>
+          import('../../routes/egress/egress.routes').then((m) => m.EGRESS_ROUTES),
+        icon: 'bi-wallet2',
+        roles: ADMIN,
+        description: 'Pagos a proveedores por órdenes de compra.',
+        api: [
+          { base: '/api/v1/Egresses', rule: 'ADMIN' },
+          { base: '/api/v1/providers', rule: 'ADMIN · solo lectura' },
+          { base: '/api/v1/purchases', rule: 'ADMIN · solo lectura' },
+          { base: '/api/v1/PayMethods', rule: 'ADMIN · solo lectura' },
+        ],
       },
     ],
   },
