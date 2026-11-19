@@ -113,7 +113,11 @@ export class AttentionHealthForm implements OnInit {
       procedures: this.procedureService.getActive().pipe(catchError(() => of([] as Procedure[]))),
     }).subscribe({
       next: ({ headquarters, pets, doctors, tutors, people, types, products, procedures }) => {
-        this.headquarters.set(headquarters.filter((item) => item.isActive));
+        this.headquarters.set(
+          headquarters.filter(
+            (item) => item.isActive && (this.session.isAdmin() || item.id === headquarterId),
+          ),
+        );
         this.pets.set(pets);
         const currentPersonId = this.session.profile()?.personId;
         const currentDoctor = doctors.find((doctor) => doctor.idPerson === currentPersonId);
@@ -124,6 +128,9 @@ export class AttentionHealthForm implements OnInit {
         this.products.set(products);
         this.procedures.set(procedures);
         this.form.controls.headquarterId.setValue(headquarterId ?? '');
+        if (!this.session.isAdmin()) {
+          this.form.controls.headquarterId.disable({ emitEvent: false });
+        }
         const appointmentId = this.route.snapshot.paramMap.get('appointmentId');
         const attentionId = this.route.snapshot.paramMap.get('attentionId');
         const selectedPetId = this.route.snapshot.queryParamMap.get('petId');

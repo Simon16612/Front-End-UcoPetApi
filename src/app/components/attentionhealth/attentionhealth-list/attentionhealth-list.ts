@@ -17,17 +17,20 @@ import { PetService } from '../../../services/pet/pet.service';
 import { DoctorService } from '../../../services/doctor/doctor.service';
 import { SessionService } from '../../../services/session/session.service';
 import { TutorPetService } from '../../../services/tutor-pet/tutor-pet.service';
+import { PageHeader } from '../../shared/page-header';
+import { injectConfirm } from '../../../services/shared/confirm';
 
 type AttentionSortKey = 'attentionId' | 'pet' | 'type' | 'status' | 'date';
 
 @Component({
   selector: 'app-attentionhealth-list',
   standalone: true,
-  imports: [DatePipe, ReactiveFormsModule, RouterLink],
+  imports: [DatePipe, ReactiveFormsModule, RouterLink, PageHeader],
   templateUrl: './attentionhealth-list.html',
 })
 export class AttentionHealthList implements OnInit {
   private readonly service = inject(AttentionHealthService);
+  private readonly confirm = injectConfirm();
   private readonly petService = inject(PetService);
   private readonly doctorService = inject(DoctorService);
   private readonly headquarterService = inject(HeadquarterService);
@@ -292,6 +295,26 @@ export class AttentionHealthList implements OnInit {
     return person ? `${person.firstName} ${person.lastName}` : tutor.person;
   }
   executeAction(row: AttentionHealth, action: 'start' | 'cancel' | 'finish'): void {
+    if (action === 'start') {
+      this.runAction(row, action);
+      return;
+    }
+    const finishing = action === 'finish';
+    this.confirm(
+      finishing ? 'Finalizar atención' : 'Cancelar atención',
+      finishing
+        ? `La atención #${row.attentionId} se cerrará: se crean las órdenes de sus procedimientos, la venta y la factura de los productos, se descuenta el stock usado y la cita queda completada. No se puede deshacer.`
+        : `¿Seguro que quieres cancelar la atención #${row.attentionId}? No se puede deshacer.`,
+      finishing ? 'Finalizar' : 'Cancelar atención',
+      finishing ? 'primary' : 'danger',
+    ).subscribe((confirmed) => {
+      if (confirmed) {
+        this.runAction(row, action);
+      }
+    });
+  }
+
+  private runAction(row: AttentionHealth, action: 'start' | 'cancel' | 'finish'): void {
     this.actionLoading.set(row.attentionId);
     const request =
       action === 'start'
