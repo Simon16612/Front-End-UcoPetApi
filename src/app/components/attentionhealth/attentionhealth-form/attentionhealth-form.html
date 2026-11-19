@@ -1,0 +1,329 @@
+<section class="container py-3">
+  <div class="d-flex justify-content-between mb-3">
+    <h1 class="h3">Nueva atención</h1>
+    <a routerLink="/atenciones" class="btn btn-outline-secondary">Volver</a>
+  </div>
+  @if (error()) {
+    <div class="alert alert-danger">{{ error() }}</div>
+  }
+  @if (validationMessage()) {
+    <div class="alert alert-warning" role="alert">{{ validationMessage() }}</div>
+  }
+  @if (loading()) {
+    <div class="alert alert-info">Cargando opciones…</div>
+  }
+  @if (itemError()) {
+    <div class="alert alert-warning" role="alert">{{ itemError() }}</div>
+  }
+  <form class="card card-body" [formGroup]="form" (ngSubmit)="submit()">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label" for="petId">Mascota *</label
+        ><select id="petId" class="form-select" formControlName="petId" (change)="onPetChange()">
+          <option value="">Selecciona una mascota</option>
+          @for (pet of pets(); track pet.id) {
+            <option [value]="pet.id">{{ pet.name }}</option>
+          }
+        </select>
+        @if (form.controls.petId.invalid && form.controls.petId.touched) {
+          <div class="invalid-feedback d-block">Selecciona una mascota.</div>
+        }
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="tutorId">Tutor *</label
+        ><select id="tutorId" class="form-select" formControlName="tutorId">
+          <option value="">Selecciona un tutor</option>
+          @for (tutor of tutors(); track tutor.id) {
+            <option [value]="tutor.id">{{ personName(tutor.person) }}</option>
+          }
+        </select>
+        @if (form.controls.tutorId.invalid && form.controls.tutorId.touched) {
+          <div class="invalid-feedback d-block">Selecciona un tutor.</div>
+        }
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="doctorId">Médico *</label
+        ><select
+          id="doctorId"
+          class="form-select"
+          formControlName="doctorId"
+          (change)="onDoctorChange()"
+        >
+          <option value="">Selecciona un médico</option>
+          @for (doctor of doctors(); track doctor.id) {
+            <option [value]="doctor.id">
+              {{ personName(doctor.idPerson) }} · {{ doctor.licenseNumber }}
+            </option>
+          }
+        </select>
+        @if (form.controls.doctorId.invalid && form.controls.doctorId.touched) {
+          <div class="invalid-feedback d-block">Selecciona un médico.</div>
+        }
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="appointmentId">Cita disponible *</label
+        ><select id="appointmentId" class="form-select" formControlName="appointmentId">
+          <option value="">Selecciona una cita confirmada</option>
+          @for (appointment of appointments(); track appointment.id) {
+            <option [value]="appointment.id">
+              {{ appointment.appointmentDate }} {{ appointment.appointmentTime }}
+              @if (appointment.appointmentTypeName) {
+                · {{ appointment.appointmentTypeName }}
+              }
+            </option>
+          }
+        </select>
+        @if (form.controls.appointmentId.invalid && form.controls.appointmentId.touched) {
+          <div class="invalid-feedback d-block">Selecciona una cita confirmada.</div>
+        }
+        @if (form.controls.petId.value && !appointments().length) {
+          <div class="form-text">Esta mascota no tiene citas pendientes disponibles.</div>
+        }
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="headquarterId">Sede *</label
+        ><select id="headquarterId" class="form-select" formControlName="headquarterId">
+          <option value="">Selecciona una sede</option>
+          @for (headquarter of headquarters(); track headquarter.id) {
+            <option [value]="headquarter.id">{{ headquarter.name }}</option>
+          }
+        </select>
+        @if (form.controls.headquarterId.invalid && form.controls.headquarterId.touched) {
+          <div class="invalid-feedback d-block">Selecciona una sede.</div>
+        }
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="attentionDate">Fecha *</label
+        ><input
+          id="attentionDate"
+          type="datetime-local"
+          class="form-control"
+          formControlName="attentionDate"
+        />
+        @if (
+          form.controls.attentionDate.hasError('attentionDateNotToday') &&
+          form.controls.attentionDate.touched
+        ) {
+          <div class="invalid-feedback d-block">La fecha de ingreso debe ser la fecha de hoy.</div>
+        }
+        @if (
+          form.controls.attentionDate.hasError('required') && form.controls.attentionDate.touched
+        ) {
+          <div class="invalid-feedback d-block">Ingresa la fecha de atención.</div>
+        }
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="attentionType">Tipo de atención *</label
+        ><select id="attentionType" class="form-select" formControlName="attentionType">
+          <option value="">Selecciona un tipo</option>
+          @for (type of attentionTypes(); track type.id) {
+            <option [value]="type.name">{{ type.name }}</option>
+          }
+        </select>
+        @if (form.controls.attentionType.invalid && form.controls.attentionType.touched) {
+          <div class="invalid-feedback d-block">Selecciona un tipo de atención.</div>
+        }
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="reason">Motivo</label
+        ><textarea id="reason" class="form-control" rows="2" formControlName="reason"></textarea>
+      </div>
+      <div class="col-12">
+        <fieldset class="border-0 p-0">
+          <legend class="float-none w-auto px-0 fs-6 fw-semibold mb-2">Productos utilizados</legend>
+          <div class="border rounded p-3">
+            <div class="row g-2 align-items-end">
+              <div class="col-md-7">
+                <label class="form-label" for="productId">Producto</label
+                ><select
+                  id="productId"
+                  class="form-select"
+                  [formControl]="productSelection.controls.productId"
+                >
+                  <option value="">Selecciona un producto</option>
+                  @for (product of products(); track product.id) {
+                    <option [value]="product.id">
+                      {{ product.name }} · Disponible: {{ product.stockAtLocation ?? 0 }}
+                    </option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label" for="productQuantity">Cantidad</label
+                ><input
+                  id="productQuantity"
+                  type="number"
+                  min="1"
+                  step="1"
+                  class="form-control"
+                  [formControl]="productSelection.controls.quantity"
+                />
+              </div>
+              <div class="col-md-2">
+                <button type="button" class="btn btn-outline-primary w-100" (click)="addProduct()">
+                  Agregar
+                </button>
+              </div>
+            </div>
+            @if (!selectedProducts().length) {
+              <p class="text-muted small mb-0 mt-3">No hay productos agregados.</p>
+            } @else {
+              <ul class="list-group list-group-flush mt-3">
+                @for (item of selectedProducts(); track item.productId) {
+                  <li
+                    class="list-group-item px-0 d-flex justify-content-between align-items-center"
+                  >
+                    <span
+                      >{{ productName(item.productId) }}
+                      <span class="text-muted">× {{ item.quantity }}</span></span
+                    ><button
+                      type="button"
+                      class="btn btn-sm btn-outline-danger"
+                      (click)="removeProduct(item.productId)"
+                    >
+                      Quitar
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        </fieldset>
+      </div>
+      <div class="col-12">
+        <fieldset class="border-0 p-0">
+          <legend class="float-none w-auto px-0 fs-6 fw-semibold mb-2">
+            Procedimientos realizados
+          </legend>
+          <div class="border rounded p-3">
+            <div class="row g-2 align-items-end">
+              <div class="col-md-10">
+                <label class="form-label" for="procedureSelection">Procedimiento</label>
+                <select
+                  id="procedureSelection"
+                  class="form-select"
+                  [formControl]="procedureSelection"
+                >
+                  <option value="">Selecciona un procedimiento</option>
+                  @for (procedure of procedures(); track procedure.id) {
+                    <option [value]="procedure.id">
+                      {{ procedure.code }} · {{ procedure.type }} — {{ procedure.description }}
+                    </option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-2">
+                <button
+                  type="button"
+                  class="btn btn-outline-primary w-100"
+                  (click)="addProcedure()"
+                >
+                  Agregar
+                </button>
+              </div>
+            </div>
+            @if (!selectedProcedureIds().length) {
+              <p class="text-muted small mb-0 mt-3">No hay procedimientos agregados.</p>
+            } @else {
+              <ul class="list-group list-group-flush mt-3">
+                @for (procedureId of selectedProcedureIds(); track procedureId) {
+                  <li
+                    class="list-group-item px-0 d-flex justify-content-between align-items-center"
+                  >
+                    <span>{{ procedureName(procedureId) }}</span
+                    ><button
+                      type="button"
+                      class="btn btn-sm btn-outline-danger"
+                      (click)="removeProcedure(procedureId)"
+                    >
+                      Quitar
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        </fieldset>
+      </div>
+      <fieldset class="col-12 border-0 p-0">
+        <legend class="float-none w-auto px-0 fs-6 fw-semibold mb-2">Signos vitales *</legend>
+        <div class="border rounded p-3">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label" for="temperature">Temperatura *</label
+              ><input
+                id="temperature"
+                type="number"
+                min="0"
+                step="0.1"
+                class="form-control"
+                formControlName="temperature"
+                required
+              />
+              @if (form.controls.temperature.invalid && form.controls.temperature.touched) {
+                <div class="invalid-feedback d-block">Ingresa una temperatura válida.</div>
+              }
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="weight">Peso *</label
+              ><input
+                id="weight"
+                type="number"
+                min="0"
+                step="0.01"
+                class="form-control"
+                formControlName="weight"
+                required
+              />
+              @if (form.controls.weight.invalid && form.controls.weight.touched) {
+                <div class="invalid-feedback d-block">Ingresa el peso.</div>
+              }
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="heartRate">Frecuencia cardíaca *</label
+              ><input
+                id="heartRate"
+                type="number"
+                min="0"
+                class="form-control"
+                formControlName="heartRate"
+                required
+              />
+              @if (form.controls.heartRate.invalid && form.controls.heartRate.touched) {
+                <div class="invalid-feedback d-block">Ingresa la frecuencia cardíaca.</div>
+              }
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="respiratoryRate">Frecuencia respiratoria *</label
+              ><input
+                id="respiratoryRate"
+                type="number"
+                min="0"
+                class="form-control"
+                formControlName="respiratoryRate"
+                required
+              />
+              @if (form.controls.respiratoryRate.invalid && form.controls.respiratoryRate.touched) {
+                <div class="invalid-feedback d-block">Ingresa la frecuencia respiratoria.</div>
+              }
+            </div>
+          </div>
+        </div>
+      </fieldset>
+      <div class="col-12">
+        <label class="form-label" for="clinicalAssessment">Valoración clínica</label
+        ><textarea
+          id="clinicalAssessment"
+          class="form-control"
+          rows="3"
+          formControlName="clinicalAssessment"
+        ></textarea>
+      </div>
+      <div class="col-12 text-end">
+        <button class="btn btn-primary" type="submit" [disabled]="loading() || !!error()">
+          Registrar atención
+        </button>
+      </div>
+    </div>
+  </form>
+</section>
