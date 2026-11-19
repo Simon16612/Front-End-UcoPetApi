@@ -1,0 +1,138 @@
+<app-modal-frame
+  [title]="transferId() ? 'Editar traslado' : 'Nuevo traslado'"
+  subtitle="Los campos con * son obligatorios"
+  icon="bi-arrow-left-right"
+  tone="grad"
+  (closed)="modal.dismiss()"
+>
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+    @if (loading()) {
+      <div class="text-center py-5">
+        <span class="spinner-border text-primary"></span>
+        <p class="text-body-secondary mt-2">Cargando información...</p>
+      </div>
+    } @else {
+      @if (error()) {
+        <div class="alert alert-danger d-flex align-items-center gap-2">
+          <i class="bi bi-exclamation-triangle-fill"></i>{{ error() }}
+        </div>
+      }
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="transfer-origin">Sede de origen *</label>
+          <select
+            id="transfer-origin"
+            class="form-select"
+            formControlName="originHeadquarterId"
+            [class.is-invalid]="invalid('originHeadquarterId')"
+          >
+            <option value="">Selecciona la sede de origen</option>
+            @for (option of headquarterOptions(); track option.id) {
+              <option [value]="option.id">{{ option.label }}</option>
+            }
+          </select>
+          <div class="invalid-feedback">La sede de origen es obligatoria.</div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label" for="transfer-destination">Sede de destino *</label>
+          <select
+            id="transfer-destination"
+            class="form-select"
+            formControlName="destinationHeadquarterId"
+            [class.is-invalid]="invalid('destinationHeadquarterId') || sameHeadquarter()"
+          >
+            <option value="">Selecciona la sede de destino</option>
+            @for (option of headquarterOptions(); track option.id) {
+              <option [value]="option.id">{{ option.label }}</option>
+            }
+          </select>
+          <div class="invalid-feedback">
+            @if (sameHeadquarter()) {
+              El destino debe ser distinto del origen.
+            } @else {
+              La sede de destino es obligatoria.
+            }
+          </div>
+        </div>
+
+        <div class="col-md-8">
+          <label class="form-label" for="transfer-product">Producto *</label>
+          <select
+            id="transfer-product"
+            class="form-select"
+            formControlName="productId"
+            [class.is-invalid]="invalid('productId')"
+            (change)="onProductChange()"
+          >
+            <option value="">Selecciona un producto</option>
+            @for (option of productOptions(); track option.id) {
+              <option [value]="option.id">{{ option.label }}</option>
+            }
+          </select>
+          <div class="invalid-feedback">El producto es obligatorio.</div>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label" for="transfer-quantity">Cantidad *</label>
+          <input
+            id="transfer-quantity"
+            type="number"
+            class="form-control"
+            formControlName="quantity"
+            min="1"
+            placeholder="Ejemplo: 10"
+            [class.is-invalid]="invalid('quantity') || exceedsStock()"
+          />
+          <div class="invalid-feedback">
+            @if (exceedsStock()) {
+              Supera el stock disponible en el origen.
+            } @else if (hasError('quantity', 'required')) {
+              La cantidad es obligatoria.
+            } @else {
+              Ingresa un entero mayor a 0.
+            }
+          </div>
+          @if (loadingStock()) {
+            <div class="form-text">Consultando stock...</div>
+          } @else if (available() !== null) {
+            <div class="form-text" [class.text-danger]="exceedsStock()">
+              Disponible en el origen: <strong>{{ available() }}</strong>
+            </div>
+          }
+        </div>
+
+        <div class="col-12">
+          <label class="form-label" for="transfer-observations">Observaciones</label>
+          <textarea
+            id="transfer-observations"
+            class="form-control"
+            rows="2"
+            maxlength="500"
+            formControlName="observations"
+            placeholder="Opcional"
+            [class.is-invalid]="invalid('observations')"
+          ></textarea>
+          <div class="invalid-feedback">Máximo 500 caracteres.</div>
+        </div>
+      </div>
+    }
+  </form>
+
+  <ng-container modalFooter>
+    <button type="button" class="btn btn-light" (click)="modal.dismiss()">Cancelar</button>
+    <button
+      type="submit"
+      class="btn btn-primary"
+      [disabled]="saving() || loading() || form.invalid || exceedsStock()"
+      (click)="save()"
+    >
+      @if (saving()) {
+        <span class="spinner-border spinner-border-sm me-2"></span>Guardando...
+      } @else {
+        <i class="bi bi-check2 me-1"></i>Guardar traslado
+      }
+    </button>
+  </ng-container>
+</app-modal-frame>

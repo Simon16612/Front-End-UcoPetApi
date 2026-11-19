@@ -1,0 +1,155 @@
+<div class="card">
+  <div class="card-header py-3">
+    <div class="row g-2 align-items-center">
+      <div class="col-md">
+        <select
+          class="form-select form-select-sm"
+          aria-label="Estado del traslado"
+          (change)="setStatus($any($event.target).value)"
+        >
+          <option value="" [selected]="status() === null">Todos los estados</option>
+          @for (option of statuses; track option.value) {
+            <option [value]="option.value" [selected]="option.value === status()">
+              {{ option.label }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <div class="col-md">
+        <select
+          class="form-select form-select-sm"
+          aria-label="Sede de origen"
+          (change)="setOrigin($any($event.target).value)"
+        >
+          <option value="" [selected]="origin() === null">Cualquier origen</option>
+          @for (item of headquarters(); track item.id) {
+            <option [value]="item.id" [selected]="item.id === origin()">{{ item.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="col-md">
+        <select
+          class="form-select form-select-sm"
+          aria-label="Sede de destino"
+          (change)="setDestination($any($event.target).value)"
+        >
+          <option value="" [selected]="destination() === null">Cualquier destino</option>
+          @for (item of headquarters(); track item.id) {
+            <option [value]="item.id" [selected]="item.id === destination()">
+              {{ item.name }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <div class="col-auto">
+        <button type="button" class="btn btn-primary btn-sm" (click)="create()">
+          <i class="bi bi-plus-lg me-1"></i>Nuevo traslado
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="alert alert-danger m-3">
+      <i class="bi bi-exclamation-triangle me-2"></i>{{ error() }}
+    </div>
+  }
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle table-card">
+      <thead>
+        <tr>
+          <th appSortHeader="product" [table]="table">Producto</th>
+          <th appSortHeader="quantity" [table]="table">Cantidad</th>
+          <th appSortHeader="origin" [table]="table">Origen</th>
+          <th appSortHeader="destination" [table]="table">Destino</th>
+          <th appSortHeader="status" [table]="table">Estado</th>
+          <th appSortHeader="createdAt" [table]="table">Registrado</th>
+          <th class="text-end"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr>
+            <td colspan="7" class="text-center py-5">
+              <span class="spinner-border text-primary"></span>
+              <div class="small text-body-secondary mt-2">Cargando traslados...</div>
+            </td>
+          </tr>
+        } @else {
+          @for (transfer of table.rows(); track transfer.id) {
+            <tr>
+              <td>
+                <div class="fw-semibold">{{ productName(transfer) }}</div>
+                @if (transfer.observations) {
+                  <div class="small text-body-secondary">{{ transfer.observations }}</div>
+                }
+              </td>
+              <td>{{ transfer.quantity }}</td>
+              <td>{{ transfer.originHeadquarter.name }}</td>
+              <td>{{ transfer.destinationHeadquarter.name }}</td>
+              <td>
+                <span class="uc-tag" [class]="'uc-tag ' + statusTag(transfer.status)">{{
+                  statusLabel(transfer.status)
+                }}</span>
+              </td>
+              <td class="text-nowrap">
+                <div>{{ transfer.createdBy.name }}</div>
+                <div class="small text-body-secondary">
+                  {{ transfer.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                </div>
+              </td>
+              <td class="text-end text-nowrap">
+                @if (transfer.status === 'PENDING') {
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    title="Editar traslado"
+                    (click)="edit(transfer)"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-success ms-1"
+                    title="Iniciar traslado"
+                    (click)="start(transfer)"
+                  >
+                    <i class="bi bi-play-fill"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger ms-1"
+                    title="Cancelar traslado"
+                    (click)="cancel(transfer)"
+                  >
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                } @else if (transfer.status === 'IN_PROGRESS') {
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-success"
+                    title="Completar traslado"
+                    (click)="complete(transfer)"
+                  >
+                    <i class="bi bi-check2-circle"></i>
+                  </button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="text-center text-body-secondary py-5">
+                <i class="bi bi-inbox fs-2 d-block mb-2"></i>No hay traslados con estos filtros
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+  <app-table-pager [total]="table.total()" [(page)]="table.page" [(pageSize)]="table.pageSize" />
+</div>

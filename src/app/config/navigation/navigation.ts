@@ -269,6 +269,7 @@ export const NAVIGATION: NavGroup[] = [
         path: 'traslados',
         entity: 'transfer',
         label: 'Traslados',
+        ready: true,
         loadChildren: () =>
           import('../../routes/transfer/transfer.routes').then((m) => m.TRANSFER_ROUTES),
         icon: 'bi-arrow-left-right',
