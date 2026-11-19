@@ -123,7 +123,7 @@ export const NAVIGATION: NavGroup[] = [
         icon: 'bi-clipboard2-pulse',
         roles: ['DOCTOR'],
         description: 'Atención del paciente, signos vitales, episodios y certificados.',
-        api: [{ base: '/api/v1/attentionhealth', rule: 'ADMIN y DOCTOR' }],
+        api: [{ base: '/api/v1/attentionhealth', rule: 'DOCTOR' }],
       },
       {
         path: 'procedimientos',
