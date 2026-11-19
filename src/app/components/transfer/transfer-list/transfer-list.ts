@@ -5,6 +5,7 @@ import { catchError, of } from 'rxjs';
 
 import { SortHeader } from '../../../directives/shared/sort-header';
 import { TablePager } from '../../shared/table-pager';
+import { PageHeader } from '../../shared/page-header';
 import { Headquarter } from '../../../models/headquarter/headquarter.model';
 import { CatalogItem } from '../../../models/product/catalog-item.model';
 import { Transfer, TransferStatus } from '../../../models/transfer/transfer.model';
@@ -23,9 +24,11 @@ import {
   statusTag,
 } from '../../../utils/transfer/transfer-labels';
 
+const PROCESSOR_DELAY_MS = 1500;
+
 @Component({
   selector: 'app-transfer-list',
-  imports: [SortHeader, TablePager, DatePipe],
+  imports: [SortHeader, TablePager, DatePipe, PageHeader],
   templateUrl: './transfer-list.html',
 })
 export class TransferList {
@@ -137,6 +140,7 @@ export class TransferList {
       'Iniciar traslado',
       `El traslado de ${transfer.quantity} × "${this.productName(transfer)}" pasará a "En proceso" y ya no se podrá editar.`,
       'Iniciar',
+      'primary',
     ).subscribe((confirmed) => {
       if (confirmed) {
         this.changeStatus(transfer, 'IN_PROGRESS', 'El traslado está en proceso');
@@ -149,6 +153,7 @@ export class TransferList {
       'Completar traslado',
       `Se marcará como completado el traslado de ${transfer.quantity} × "${this.productName(transfer)}".`,
       'Completar',
+      'primary',
     ).subscribe((confirmed) => {
       if (confirmed) {
         this.changeStatus(transfer, 'COMPLETED', 'El traslado quedó completado');
@@ -184,5 +189,6 @@ export class TransferList {
   private afterSave(message: string): void {
     this.toast.success(message);
     this.refresh.update((value) => value + 1);
+    setTimeout(() => this.refresh.update((value) => value + 1), PROCESSOR_DELAY_MS);
   }
 }
